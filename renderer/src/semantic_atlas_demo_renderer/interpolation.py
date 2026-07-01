@@ -16,10 +16,10 @@ TensorT = TypeVar("TensorT", bound=TensorLike)
 @dataclass(frozen=True)
 class InterpolationSettings:
     step_scale: float = 1.0
-    x_gain: float = 1.0
-    y_gain: float = 1.0
-    edge_start: float = 0.55
-    edge_boost: float = 0.75
+    x_gain: float = 1.35
+    y_gain: float = 1.35
+    edge_start: float = 0.35
+    edge_boost: float = 1.25
 
 
 @dataclass(frozen=True)

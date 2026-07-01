@@ -37,6 +37,12 @@ def test_prompt_set_for_idea_builds_base_and_axis_endpoint_prompts() -> None:
     assert idea.xAxis.positivePrompt in prompt_set.x_positive
     assert idea.yAxis.negativePrompt in prompt_set.y_negative
     assert idea.yAxis.positivePrompt in prompt_set.y_positive
+    assert prompt_set.x_negative_extreme is not None
+    assert prompt_set.x_positive_extreme is not None
+    assert prompt_set.y_negative_extreme is not None
+    assert prompt_set.y_positive_extreme is not None
+    assert "extreme endpoint transformation" in prompt_set.x_negative_extreme
+    assert idea.xAxis.negativePrompt in prompt_set.x_negative_extreme
 
 
 def test_prefer_local_file_env_uses_existing_fallback_without_overwriting(

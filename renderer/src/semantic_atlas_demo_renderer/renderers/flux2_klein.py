@@ -104,10 +104,10 @@ class Flux2KleinRenderer(Renderer):
 
         self.settings = InterpolationSettings(
             step_scale=float(os.environ.get("ATLAS_STEP_SCALE", "1.0")),
-            x_gain=float(os.environ.get("ATLAS_X_GAIN", "1.0")),
-            y_gain=float(os.environ.get("ATLAS_Y_GAIN", "1.0")),
-            edge_start=float(os.environ.get("ATLAS_EDGE_START", "0.55")),
-            edge_boost=float(os.environ.get("ATLAS_EDGE_BOOST", "0.75")),
+            x_gain=float(os.environ.get("ATLAS_X_GAIN", "1.35")),
+            y_gain=float(os.environ.get("ATLAS_Y_GAIN", "1.35")),
+            edge_start=float(os.environ.get("ATLAS_EDGE_START", "0.35")),
+            edge_boost=float(os.environ.get("ATLAS_EDGE_BOOST", "1.25")),
         )
         self.encoded_by_idea: dict[str, EncodedPromptSet] = {}
 

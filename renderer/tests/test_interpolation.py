@@ -68,3 +68,25 @@ def test_interpolate_conditioning_keeps_center_on_base() -> None:
 
     assert isinstance(result, FakeTensor)
     assert result.value == 10.0
+
+
+def test_interpolate_conditioning_uses_extreme_endpoint_at_grid_edge() -> None:
+    encoded = EncodedPromptSet(
+        base=FakeTensor(10.0),
+        x_negative=FakeTensor(1.0),
+        x_positive=FakeTensor(14.0),
+        y_negative=FakeTensor(3.0),
+        y_positive=FakeTensor(20.0),
+        x_positive_extreme=FakeTensor(30.0),
+        y_negative_extreme=FakeTensor(-20.0),
+    )
+
+    result = interpolate_conditioning(
+        encoded,
+        x=1.0,
+        y=-1.0,
+        settings=InterpolationSettings(),
+    )
+
+    assert isinstance(result, FakeTensor)
+    assert result.value == 0.0
