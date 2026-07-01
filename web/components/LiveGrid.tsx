@@ -33,8 +33,7 @@ export function LiveGrid({ idea }: Props) {
   const [runStartedAt, setRunStartedAt] = useState<number | null>(null);
   const [liveElapsedMs, setLiveElapsedMs] = useState(0);
   const [activeBatchSize, setActiveBatchSize] = useState(0);
-  const [progressText, setProgressText] = useState("Waiting for renderer");
-  const started = useRef(false);
+  const [progressText, setProgressText] = useState("Ready to generate");
   const eventSource = useRef<EventSource | null>(null);
   const worldSeed = useMemo(() => stableSeed(idea.id), [idea.id]);
 
@@ -44,7 +43,6 @@ export function LiveGrid({ idea }: Props) {
 
   const startGrid = useCallback(async () => {
     eventSource.current?.close();
-    started.current = true;
     setCells({});
     setStatus("starting");
     setError(null);
@@ -126,11 +124,8 @@ export function LiveGrid({ idea }: Props) {
   }, [idea.id, worldSeed]);
 
   useEffect(() => {
-    if (!started.current) {
-      void startGrid();
-    }
     return () => eventSource.current?.close();
-  }, [startGrid]);
+  }, []);
 
   useEffect(() => {
     if (!runStartedAt || (status !== "starting" && status !== "running")) {
@@ -194,7 +189,7 @@ export function LiveGrid({ idea }: Props) {
 
         <div className="panelActions">
           <button className="primaryButton" onClick={startGrid} type="button">
-            {status === "running" || status === "starting" ? "Restart" : "Generate again"}
+            {buttonLabel(status)}
           </button>
           <Link href="/" className="secondaryButton">
             Change idea
@@ -270,6 +265,16 @@ function statusLabel(status: "idle" | "starting" | "running" | "done" | "error")
     return "Error";
   }
   return "Idle";
+}
+
+function buttonLabel(status: "idle" | "starting" | "running" | "done" | "error"): string {
+  if (status === "idle") {
+    return "Generate grid";
+  }
+  if (status === "starting" || status === "running") {
+    return "Restart";
+  }
+  return "Generate again";
 }
 
 function paletteStyle(palette: string[]): CSSProperties {
