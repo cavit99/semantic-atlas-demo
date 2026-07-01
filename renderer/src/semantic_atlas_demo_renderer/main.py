@@ -97,6 +97,7 @@ async def render_grid_job(job_id: str, idea, request: GridRequest) -> None:
                     "backend": renderer.name,
                 }
             )
+            await asyncio.sleep(0.05)
             images = await renderer.render_many(
                 idea=idea,
                 points=batch,
@@ -119,6 +120,7 @@ async def render_grid_job(job_id: str, idea, request: GridRequest) -> None:
                         "backend": renderer.name,
                     }
                 )
+            await asyncio.sleep(0.05)
         await job.finish(
             {
                 "type": "done",
