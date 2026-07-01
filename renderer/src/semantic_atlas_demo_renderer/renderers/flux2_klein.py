@@ -22,7 +22,63 @@ from .base import Renderer
 DEFAULT_KLEIN_4B_MODEL_PATH = (
     Path.home() / "ComfyUI/models/diffusion_models/flux-2-klein-4b.safetensors"
 )
-DEFAULT_AE_MODEL_PATH = Path.home() / "ComfyUI/models/vae/flux2-vae.safetensors"
+DEFAULT_QWEN_4B_MODEL_DIR = Path.home() / ".cache/semantic-atlas-demo/qwen3-4b"
+QWEN3_OUTPUT_LAYERS = (9, 18, 27)
+QWEN3_MAX_LENGTH = 512
+
+
+class LocalQwen3Embedder:
+    def __init__(self, model_spec: str | Path, device: Any) -> None:
+        import torch
+        from einops import rearrange
+        from transformers import AutoModel, AutoTokenizer
+
+        self.torch = torch
+        self.rearrange = rearrange
+        self.device = device
+        dtype = torch.float16 if torch.device(device).type == "mps" else torch.bfloat16
+        self.model = AutoModel.from_pretrained(str(model_spec), dtype=dtype).to(device)
+        self.tokenizer = AutoTokenizer.from_pretrained(str(model_spec))
+
+    def eval(self) -> LocalQwen3Embedder:
+        self.model.eval()
+        return self
+
+    def __call__(self, txt: list[str]):
+        return self.forward(txt)
+
+    def forward(self, txt: list[str]):
+        torch = self.torch
+        all_input_ids = []
+        all_attention_masks = []
+
+        for prompt in txt:
+            text = self.tokenizer.apply_chat_template(
+                [{"role": "user", "content": prompt}],
+                tokenize=False,
+                add_generation_prompt=True,
+                enable_thinking=False,
+            )
+            model_inputs = self.tokenizer(
+                text,
+                return_tensors="pt",
+                padding="max_length",
+                truncation=True,
+                max_length=QWEN3_MAX_LENGTH,
+            )
+            all_input_ids.append(model_inputs["input_ids"])
+            all_attention_masks.append(model_inputs["attention_mask"])
+
+        with torch.no_grad():
+            output = self.model(
+                input_ids=torch.cat(all_input_ids, dim=0).to(self.device),
+                attention_mask=torch.cat(all_attention_masks, dim=0).to(self.device),
+                output_hidden_states=True,
+                use_cache=False,
+            )
+
+        out = torch.stack([output.hidden_states[k] for k in QWEN3_OUTPUT_LAYERS], dim=1)
+        return self.rearrange(out, "b c l d -> b l (c d)")
 
 
 class Flux2KleinRenderer(Renderer):
@@ -111,22 +167,24 @@ class Flux2KleinRenderer(Renderer):
 
     def _load_text_encoder(self, load_text_encoder: Any) -> Any:
         model_spec = os.environ.get("FLUX2_TEXT_ENCODER_MODEL")
-        if not model_spec:
-            return load_text_encoder(self.model_name, device=self.device)
+        if model_spec:
+            model_path = Path(model_spec).expanduser()
+            if model_path.exists() and model_path.is_file():
+                raise RuntimeError(
+                    "FLUX2_TEXT_ENCODER_MODEL must point to a Transformers model directory or repo id. "
+                    "A single qwen_3_4b.safetensors file is not enough because tokenizer/config files are also needed."
+                )
+            if model_path.exists():
+                return LocalQwen3Embedder(model_path, device=self.device)
 
-        model_path = Path(model_spec).expanduser()
-        if model_path.exists() and model_path.is_file():
-            raise RuntimeError(
-                "FLUX2_TEXT_ENCODER_MODEL must point to a Transformers model directory or repo id. "
-                "A single qwen_3_4b.safetensors file is not enough because tokenizer/config files are also needed."
-            )
+            from flux2.text_encoder import Qwen3Embedder
 
-        from flux2.text_encoder import Qwen3Embedder
+            return Qwen3Embedder(model_spec=model_spec, device=self.device)
 
-        return Qwen3Embedder(
-            model_spec=str(model_path if model_path.exists() else model_spec),
-            device=self.device,
-        )
+        if DEFAULT_QWEN_4B_MODEL_DIR.exists():
+            return LocalQwen3Embedder(DEFAULT_QWEN_4B_MODEL_DIR, device=self.device)
+
+        return load_text_encoder(self.model_name, device=self.device)
 
     def _encode_prompt_set(self, prompt_set: PromptSetText) -> EncodedPromptSet:
         torch = self.torch
@@ -200,7 +258,6 @@ class Flux2KleinRenderer(Renderer):
 
 def configure_local_flux2_paths() -> None:
     prefer_local_file_env("KLEIN_4B_MODEL_PATH", DEFAULT_KLEIN_4B_MODEL_PATH)
-    prefer_local_file_env("AE_MODEL_PATH", DEFAULT_AE_MODEL_PATH)
 
 
 def prefer_local_file_env(name: str, fallback_path: Path) -> None:

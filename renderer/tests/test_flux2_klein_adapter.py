@@ -10,6 +10,7 @@ from PIL import Image
 
 from semantic_atlas_demo_renderer.ideas import DEFAULT_STYLE_ANCHOR, load_ideas, prompt_set_for_idea
 from semantic_atlas_demo_renderer.interpolation import EncodedPromptSet, InterpolationSettings
+from semantic_atlas_demo_renderer.renderers import flux2_klein
 from semantic_atlas_demo_renderer.renderers.flux2_klein import (
     Flux2KleinRenderer,
     prefer_local_file_env,
@@ -67,6 +68,27 @@ def test_text_encoder_override_rejects_single_safetensors_file(
 
     with pytest.raises(RuntimeError, match="single qwen_3_4b.safetensors"):
         renderer._load_text_encoder(lambda *_args, **_kwargs: object())
+
+
+def test_text_encoder_override_uses_local_transformers_directory(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setenv("FLUX2_TEXT_ENCODER_MODEL", str(tmp_path))
+    calls: list[dict[str, object]] = []
+
+    class FakeLocalQwen3Embedder:
+        def __init__(self, model_spec: Path, device: object) -> None:
+            calls.append({"model_spec": model_spec, "device": device})
+
+    monkeypatch.setattr(flux2_klein, "LocalQwen3Embedder", FakeLocalQwen3Embedder)
+
+    renderer = Flux2KleinRenderer.__new__(Flux2KleinRenderer)
+    renderer.device = "test-device"
+    embedder = renderer._load_text_encoder(lambda *_args, **_kwargs: object())
+
+    assert isinstance(embedder, FakeLocalQwen3Embedder)
+    assert calls == [{"model_spec": tmp_path, "device": "test-device"}]
 
 
 def test_flux2_klein_render_uses_interpolated_conditioning_before_sampling() -> None:

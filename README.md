@@ -70,17 +70,18 @@ uv sync --group local-models
 RENDER_BACKEND=flux2_klein DEVICE=auto uv run semantic-atlas-demo-renderer
 ```
 
-When present, the renderer automatically points BFL's loader at these local
-ComfyUI files instead of downloading the diffusion model or VAE:
+When present, the renderer automatically points BFL's loader at the local
+ComfyUI Flux transformer instead of downloading it:
 
 ```text
 /Users/caviterginsoy/ComfyUI/models/diffusion_models/flux-2-klein-4b.safetensors
-/Users/caviterginsoy/ComfyUI/models/vae/flux2-vae.safetensors
 ```
 
-The Qwen text encoder still needs a Transformers-compatible model directory or
-repo id because the tokenizer/config are required. A single `qwen_3_4b.safetensors`
-file is not enough for the BFL loader by itself.
+The local `qwen_3_4b.safetensors` file is wrapped with Qwen3 tokenizer/config
+files under `~/.cache/semantic-atlas-demo/qwen3-4b`. The ComfyUI
+`flux2-vae.safetensors` file uses Diffusers key names, so `AE_MODEL_PATH` should
+only be set to a BFL-compatible `ae.safetensors`; otherwise the BFL loader will
+use its normal `ae.safetensors` source.
 
 Experimental local MPS path:
 
