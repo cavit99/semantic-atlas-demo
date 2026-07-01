@@ -21,48 +21,6 @@
     "suffix": "rich illustrated surface, coherent non-photographic visual study"
   },
   {
-    "id": "cactus-courtyard",
-    "title": "Cactus Courtyard",
-    "family": "garden",
-    "scene": "A cactus garden in a walled court with gravel paths, sculptural plants, low plinths, surrounding walls, and a patch of sky above.",
-    "midpointPrompt": "A cactus garden in a walled court, with gravel paths, sculptural plants, low plinths, surrounding walls, and a patch of sky above. Moderate spacing between repeated elements and balanced weather, neither parched sun nor heavy rain.",
-    "xAxis": {
-      "negativeLabel": "sparse",
-      "positiveLabel": "dense",
-      "negativePrompt": "sparse arrangement, open gaps, few objects",
-      "positivePrompt": "dense arrangement, packed objects, close spacing"
-    },
-    "yAxis": {
-      "negativeLabel": "dry sun",
-      "positiveLabel": "misty rain",
-      "negativePrompt": "dry sunlit air, crisp shadows, warm gravel",
-      "positivePrompt": "misty rain, wet stone, softened distance, droplets on plants"
-    },
-    "palette": ["#d9c27e", "#50723c", "#b85c38", "#1c2a22"],
-    "suffix": "rich illustrated surface, hand-rendered botanical detail"
-  },
-  {
-    "id": "lava-shrine",
-    "title": "Lava Shrine",
-    "family": "landscape",
-    "scene": "A small shrine standing on a dark lava field with cracked ground, low volcanic ridges, sparse plants, and a wide sky around it.",
-    "midpointPrompt": "A small shrine standing on a dark lava field, with cracked ground, low volcanic ridges, sparse plants, and a wide sky around it. Mixed cloud cover and calm air, evening ambient light, neither overhead noon glare nor near-black midnight.",
-    "xAxis": {
-      "negativeLabel": "clear",
-      "positiveLabel": "stormy",
-      "negativePrompt": "clear sky, calm air, clean horizon",
-      "positivePrompt": "storm clouds, turbulent sky, windblown surfaces"
-    },
-    "yAxis": {
-      "negativeLabel": "noon",
-      "positiveLabel": "midnight",
-      "negativePrompt": "high noon light, short shadows, bright overhead sky",
-      "positivePrompt": "midnight darkness, sparse lights, dark upper space"
-    },
-    "palette": ["#f0713a", "#2f4858", "#f7d488", "#140f12"],
-    "suffix": "rich illustrated surface, dramatic volcanic atmosphere"
-  },
-  {
     "id": "greenhouse-laboratory",
     "title": "Greenhouse Laboratory",
     "family": "garden",
@@ -75,10 +33,10 @@
       "positivePrompt": "grimy surfaces, stains, soot, dirty residue"
     },
     "yAxis": {
-      "negativeLabel": "photo",
-      "positiveLabel": "illustration",
-      "negativePrompt": "documentary photograph, camera realism, natural exposure",
-      "positivePrompt": "hand-rendered illustration, visible drawn marks, simplified painted surfaces"
+      "negativeLabel": "daylight",
+      "positiveLabel": "grow lights",
+      "negativePrompt": "soft daylight through glass, natural shadows, sunlit leaves",
+      "positivePrompt": "electric grow lights, magenta and cyan lamps, glowing equipment"
     },
     "palette": ["#8bd3a8", "#f2f4d8", "#5f6f52", "#16302b"],
     "suffix": "coherent visual study, stable greenhouse composition"
@@ -126,48 +84,6 @@
     "suffix": "rich illustrated surface, airy fantasy landscape"
   },
   {
-    "id": "industrial-spillway",
-    "title": "Industrial Spillway",
-    "family": "industrial",
-    "scene": "An industrial spillway interior with ramps, retaining walls, channels, catwalks, grates, and heavy concrete openings around a deep basin.",
-    "midpointPrompt": "An industrial spillway interior with ramps, retaining walls, channels, catwalks, grates, and heavy concrete openings around a deep basin. Light haze, distance still readable, balanced neutral palette with both warm and cool notes.",
-    "xAxis": {
-      "negativeLabel": "clear air",
-      "positiveLabel": "foggy",
-      "negativePrompt": "clear air, visible distance, sharp background",
-      "positivePrompt": "fog filling the scene, softened distance, pale haze"
-    },
-    "yAxis": {
-      "negativeLabel": "warm",
-      "positiveLabel": "cool",
-      "negativePrompt": "warm palette, ochres, reds, golden tones",
-      "positivePrompt": "cool palette, blues, teals, silvery tones"
-    },
-    "palette": ["#c98b4b", "#7798ab", "#3b4147", "#121416"],
-    "suffix": "rich illustrated surface, heavy concrete atmosphere"
-  },
-  {
-    "id": "harbor-quay",
-    "title": "Harbor Quay",
-    "family": "seascape",
-    "scene": "A small harbor quay with boats, stone edges, ropes, low buildings, water reflections, and a long open channel toward the horizon.",
-    "midpointPrompt": "A small harbor quay with boats, stone edges, ropes, low buildings, water reflections, and a long open channel toward the horizon. Calm-to-active water with readable structure, early evening light between dawn and night.",
-    "xAxis": {
-      "negativeLabel": "calm",
-      "positiveLabel": "stormy",
-      "negativePrompt": "calm water, soft ripples, still moored boats",
-      "positivePrompt": "stormy water, windblown spray, choppy waves"
-    },
-    "yAxis": {
-      "negativeLabel": "dawn",
-      "positiveLabel": "night",
-      "negativePrompt": "pale dawn light, low warm horizon, soft visibility",
-      "positivePrompt": "night harbor, dark water, lamps and reflected lights"
-    },
-    "palette": ["#8ecae6", "#fb8500", "#264653", "#0d1b2a"],
-    "suffix": "rich illustrated surface, maritime atmosphere"
-  },
-  {
     "id": "library-reading-room",
     "title": "Library Reading Room",
     "family": "interior",
@@ -187,26 +103,5 @@
     },
     "palette": ["#d6a75a", "#7f4f24", "#6d8ea0", "#1b1713"],
     "suffix": "rich illustrated surface, quiet architectural interior"
-  },
-  {
-    "id": "rooftop-garden",
-    "title": "Rooftop Garden",
-    "family": "architecture",
-    "scene": "A rooftop garden with planters, paths, railings, water trays, seating, distant roofs, and layered plants around a central walkway.",
-    "midpointPrompt": "A rooftop garden with planters, paths, railings, water trays, seating, distant roofs, and layered plants around a central walkway. Balanced plant order, neither wild nor clipped, with a view between ground-level and aerial.",
-    "xAxis": {
-      "negativeLabel": "overgrown",
-      "positiveLabel": "manicured",
-      "negativePrompt": "overgrown plants, wild edges, dense loose foliage",
-      "positivePrompt": "manicured plants, clipped edges, orderly planting beds"
-    },
-    "yAxis": {
-      "negativeLabel": "ground view",
-      "positiveLabel": "aerial view",
-      "negativePrompt": "ground-level view, foreground plants large, human-height horizon",
-      "positivePrompt": "aerial view, looking down over paths and planters"
-    },
-    "palette": ["#a7c957", "#386641", "#e9c46a", "#242423"],
-    "suffix": "rich illustrated surface, calm rooftop atmosphere"
   }
 ]

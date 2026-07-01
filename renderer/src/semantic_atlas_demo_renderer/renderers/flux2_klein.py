@@ -4,11 +4,25 @@ import base64
 import io
 import os
 import time
+from pathlib import Path
+from typing import Any
 
-from semantic_atlas_demo_renderer.ideas import compose_prompt
-from semantic_atlas_demo_renderer.schemas import Idea, RenderedImage
+from PIL import Image
+
+from semantic_atlas_demo_renderer.ideas import prompt_set_for_idea
+from semantic_atlas_demo_renderer.interpolation import (
+    EncodedPromptSet,
+    InterpolationSettings,
+    interpolate_conditioning,
+)
+from semantic_atlas_demo_renderer.schemas import Idea, PromptSetText, RenderedImage
 
 from .base import Renderer
+
+DEFAULT_KLEIN_4B_MODEL_PATH = (
+    Path.home() / "ComfyUI/models/diffusion_models/flux-2-klein-4b.safetensors"
+)
+DEFAULT_AE_MODEL_PATH = Path.home() / "ComfyUI/models/vae/flux2-vae.safetensors"
 
 
 class Flux2KleinRenderer(Renderer):
@@ -17,22 +31,36 @@ class Flux2KleinRenderer(Renderer):
     def __init__(self) -> None:
         try:
             import torch
-            from diffusers import Flux2KleinPipeline
-        except Exception as error:  # pragma: no cover - optional CUDA path
+            from flux2.util import load_ae, load_flow_model, load_text_encoder
+        except Exception as error:  # pragma: no cover - optional model path
             raise RuntimeError(
-                "flux2_klein requires Diffusers with Flux2KleinPipeline and a CUDA-capable "
-                "PyTorch install. Install the local-models dependency group and run on CUDA."
+                "flux2_klein requires the BFL flux2 package and PyTorch. "
+                "Run `uv sync --group local-models` in renderer/ before using this backend."
             ) from error
 
-        self._torch = torch
-        model_id = os.environ.get("FLUX2_MODEL_ID", "black-forest-labs/FLUX.2-klein-4B")
-        dtype = torch.bfloat16 if os.environ.get("DEVICE", "cuda") == "cuda" else torch.float16
-        self.pipe = Flux2KleinPipeline.from_pretrained(
-            model_id,
-            torch_dtype=dtype,
-            local_files_only=os.environ.get("LOCAL_FILES_ONLY", "0") == "1",
+        configure_local_flux2_paths()
+        self.torch = torch
+        self.model_name = os.environ.get("FLUX2_MODEL_NAME", "flux.2-klein-4b")
+        self.device = resolve_device(
+            torch,
+            os.environ.get("DEVICE", os.environ.get("ATLAS_RENDERER_DEVICE", "auto")),
         )
-        self.pipe.to(os.environ.get("DEVICE", "cuda"))
+
+        self.settings = InterpolationSettings(
+            step_scale=float(os.environ.get("ATLAS_STEP_SCALE", "1.0")),
+            x_gain=float(os.environ.get("ATLAS_X_GAIN", "1.0")),
+            y_gain=float(os.environ.get("ATLAS_Y_GAIN", "1.0")),
+            edge_start=float(os.environ.get("ATLAS_EDGE_START", "0.55")),
+            edge_boost=float(os.environ.get("ATLAS_EDGE_BOOST", "0.75")),
+        )
+        self.encoded_by_idea: dict[str, EncodedPromptSet] = {}
+
+        self.text_encoder = self._load_text_encoder(load_text_encoder)
+        self.model = load_flow_model(self.model_name, device=self.device)
+        self.ae = load_ae(self.model_name, device=self.device)
+        self.text_encoder.eval()
+        self.model.eval()
+        self.ae.eval()
 
     async def render(
         self,
@@ -44,24 +72,26 @@ class Flux2KleinRenderer(Renderer):
         width: int,
         height: int,
     ) -> RenderedImage:
+        if width % 16 != 0 or height % 16 != 0:
+            raise ValueError("width and height must be multiples of 16 for Flux2")
+
         start = time.perf_counter()
-        prompt = compose_prompt(idea, x, y)
-        generator = self._torch.Generator(device=os.environ.get("DEVICE", "cuda")).manual_seed(world_seed)
-        image = self.pipe(
-            prompt=prompt,
-            width=width,
-            height=height,
-            num_inference_steps=int(os.environ.get("FLUX2_STEPS", "4")),
-            guidance_scale=float(os.environ.get("FLUX2_GUIDANCE", "1.0")),
-            generator=generator,
-            max_sequence_length=512,
-            text_encoder_out_layers=(9, 18, 27),
-        ).images[0]
+        torch = self.torch
+        encoded = self._encoded_prompt_set(idea)
+        with torch.inference_mode():
+            ctx = interpolate_conditioning(
+                encoded,
+                x=x,
+                y=y,
+                settings=self.settings,
+            ).to(dtype=torch.bfloat16, device=self.device)
+            image = self._sample(ctx=ctx, width=width, height=height, seed=world_seed)
+
         buffer = io.BytesIO()
         image.save(buffer, format="WEBP", quality=90)
-        encoded = base64.b64encode(buffer.getvalue()).decode("ascii")
+        encoded_image = base64.b64encode(buffer.getvalue()).decode("ascii")
         return RenderedImage(
-            imageUrl=f"data:image/webp;base64,{encoded}",
+            imageUrl=f"data:image/webp;base64,{encoded_image}",
             width=width,
             height=height,
             x=x,
@@ -70,3 +100,127 @@ class Flux2KleinRenderer(Renderer):
             elapsedMs=int((time.perf_counter() - start) * 1000),
             backend=self.name,
         )
+
+    def _encoded_prompt_set(self, idea: Idea) -> EncodedPromptSet:
+        existing = self.encoded_by_idea.get(idea.id)
+        if existing is not None:
+            return existing
+        encoded = self._encode_prompt_set(prompt_set_for_idea(idea))
+        self.encoded_by_idea[idea.id] = encoded
+        return encoded
+
+    def _load_text_encoder(self, load_text_encoder: Any) -> Any:
+        model_spec = os.environ.get("FLUX2_TEXT_ENCODER_MODEL")
+        if not model_spec:
+            return load_text_encoder(self.model_name, device=self.device)
+
+        model_path = Path(model_spec).expanduser()
+        if model_path.exists() and model_path.is_file():
+            raise RuntimeError(
+                "FLUX2_TEXT_ENCODER_MODEL must point to a Transformers model directory or repo id. "
+                "A single qwen_3_4b.safetensors file is not enough because tokenizer/config files are also needed."
+            )
+
+        from flux2.text_encoder import Qwen3Embedder
+
+        return Qwen3Embedder(
+            model_spec=str(model_path if model_path.exists() else model_spec),
+            device=self.device,
+        )
+
+    def _encode_prompt_set(self, prompt_set: PromptSetText) -> EncodedPromptSet:
+        torch = self.torch
+        fields: list[tuple[str, str | None]] = [
+            ("base", prompt_set.base),
+            ("x_negative", prompt_set.x_negative),
+            ("x_positive", prompt_set.x_positive),
+            ("y_negative", prompt_set.y_negative),
+            ("y_positive", prompt_set.y_positive),
+            ("x_negative_extreme", prompt_set.x_negative_extreme),
+            ("x_positive_extreme", prompt_set.x_positive_extreme),
+            ("y_negative_extreme", prompt_set.y_negative_extreme),
+            ("y_positive_extreme", prompt_set.y_positive_extreme),
+        ]
+        active = [(name, value) for name, value in fields if value]
+        with torch.inference_mode():
+            encoded = self.text_encoder([value for _, value in active]).to(
+                dtype=torch.bfloat16,
+                device=self.device,
+            )
+        by_name = {name: encoded[index : index + 1] for index, (name, _value) in enumerate(active)}
+        return EncodedPromptSet(
+            base=by_name["base"],
+            x_negative=by_name["x_negative"],
+            x_positive=by_name["x_positive"],
+            y_negative=by_name["y_negative"],
+            y_positive=by_name["y_positive"],
+            x_negative_extreme=by_name.get("x_negative_extreme"),
+            x_positive_extreme=by_name.get("x_positive_extreme"),
+            y_negative_extreme=by_name.get("y_negative_extreme"),
+            y_positive_extreme=by_name.get("y_positive_extreme"),
+        )
+
+    def _sample(self, *, ctx: Any, width: int, height: int, seed: int) -> Image.Image:
+        import torch
+        from einops import rearrange
+        from flux2.sampling import (
+            batched_prc_img,
+            batched_prc_txt,
+            denoise,
+            get_schedule,
+            scatter_ids,
+        )
+
+        ctx, ctx_ids = batched_prc_txt(ctx)
+        shape = (1, 128, height // 16, width // 16)
+        noise = torch.randn(
+            shape,
+            generator=torch.Generator(device=self.device).manual_seed(seed),
+            dtype=torch.bfloat16,
+            device=self.device,
+        )
+        x, x_ids = batched_prc_img(noise)
+        timesteps = get_schedule(4, x.shape[1])
+        x = denoise(
+            self.model,
+            x,
+            x_ids,
+            ctx,
+            ctx_ids,
+            timesteps=timesteps,
+            guidance=1.0,
+            img_cond_seq=None,
+            img_cond_seq_ids=None,
+        )
+        x = torch.cat(scatter_ids(x, x_ids)).squeeze(2)
+        decoded = self.ae.decode(x).float().clamp(-1, 1)
+        item = rearrange(decoded[0], "c h w -> h w c")
+        return Image.fromarray((127.5 * (item + 1.0)).cpu().byte().numpy())
+
+
+def configure_local_flux2_paths() -> None:
+    prefer_local_file_env("KLEIN_4B_MODEL_PATH", DEFAULT_KLEIN_4B_MODEL_PATH)
+    prefer_local_file_env("AE_MODEL_PATH", DEFAULT_AE_MODEL_PATH)
+
+
+def prefer_local_file_env(name: str, fallback_path: Path) -> None:
+    if name in os.environ:
+        return
+    if fallback_path.exists():
+        os.environ[name] = str(fallback_path)
+
+
+def resolve_device(torch: Any, requested: str):
+    if requested != "auto":
+        device = torch.device(requested)
+        if device.type == "cuda" and not torch.cuda.is_available():
+            raise RuntimeError("DEVICE=cuda was requested, but CUDA is not available.")
+        if device.type == "mps" and not torch.backends.mps.is_available():
+            raise RuntimeError("DEVICE=mps was requested, but MPS is not available.")
+        return device
+
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    if torch.backends.mps.is_available():
+        return torch.device("mps")
+    return torch.device("cpu")

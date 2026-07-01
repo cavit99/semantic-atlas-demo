@@ -54,8 +54,8 @@ export function LiveGrid({ idea }: Props) {
           ideaId: idea.id,
           gridSize: 3,
           worldSeed,
-          width: 768,
-          height: 768
+          width: 512,
+          height: 512
         })
       });
 

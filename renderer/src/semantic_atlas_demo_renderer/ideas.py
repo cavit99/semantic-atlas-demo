@@ -4,7 +4,9 @@ import json
 from functools import lru_cache
 from pathlib import Path
 
-from .schemas import Idea
+from .schemas import Idea, PromptSetText
+
+DEFAULT_STYLE_ANCHOR = "consistent non-photographic illustrated concept art, hand-rendered surface, no camera realism"
 
 
 def repo_root() -> Path:
@@ -36,3 +38,23 @@ def compose_prompt(idea: Idea, x: float, y: float) -> str:
         idea.suffix,
     ]
     return ", ".join(part.strip() for part in parts if part.strip())
+
+
+def compose_endpoint_prompt(midpoint_prompt: str, transform_prompt: str | None, suffix: str) -> str:
+    parts = [
+        midpoint_prompt.strip(),
+        transform_prompt.strip() if transform_prompt else "",
+        DEFAULT_STYLE_ANCHOR,
+        suffix.strip(),
+    ]
+    return ", ".join(part for part in parts if part)
+
+
+def prompt_set_for_idea(idea: Idea) -> PromptSetText:
+    return PromptSetText(
+        base=compose_endpoint_prompt(idea.midpointPrompt, None, idea.suffix),
+        x_negative=compose_endpoint_prompt(idea.midpointPrompt, idea.xAxis.negativePrompt, idea.suffix),
+        x_positive=compose_endpoint_prompt(idea.midpointPrompt, idea.xAxis.positivePrompt, idea.suffix),
+        y_negative=compose_endpoint_prompt(idea.midpointPrompt, idea.yAxis.negativePrompt, idea.suffix),
+        y_positive=compose_endpoint_prompt(idea.midpointPrompt, idea.yAxis.positivePrompt, idea.suffix),
+    )

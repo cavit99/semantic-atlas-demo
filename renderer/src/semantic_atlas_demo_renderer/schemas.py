@@ -24,12 +24,24 @@ class Idea(BaseModel):
     suffix: str
 
 
+class PromptSetText(BaseModel):
+    base: str
+    x_negative: str
+    x_positive: str
+    y_negative: str
+    y_positive: str
+    x_negative_extreme: str | None = None
+    x_positive_extreme: str | None = None
+    y_negative_extreme: str | None = None
+    y_positive_extreme: str | None = None
+
+
 class GridRequest(BaseModel):
     ideaId: str
     gridSize: Literal[3] = 3
     worldSeed: int = Field(ge=0)
-    width: int = Field(default=768, ge=256, le=1024)
-    height: int = Field(default=768, ge=256, le=1024)
+    width: int = Field(default=512, ge=256, le=1024)
+    height: int = Field(default=512, ge=256, le=1024)
 
 
 class CoordinateRequest(BaseModel):
@@ -37,8 +49,8 @@ class CoordinateRequest(BaseModel):
     x: float = Field(ge=-1, le=1)
     y: float = Field(ge=-1, le=1)
     worldSeed: int = Field(ge=0)
-    width: int = Field(default=768, ge=256, le=1024)
-    height: int = Field(default=768, ge=256, le=1024)
+    width: int = Field(default=512, ge=256, le=1024)
+    height: int = Field(default=512, ge=256, le=1024)
 
 
 class GridStartResponse(BaseModel):

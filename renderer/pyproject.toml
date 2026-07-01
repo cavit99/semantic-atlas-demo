@@ -20,7 +20,9 @@ dev = [
 ]
 local-models = [
   "accelerate>=1.0.0,<2",
+  "einops>=0.8.1,<1",
   "diffusers>=0.35.0",
+  "flux @ git+https://github.com/black-forest-labs/flux2.git@50fe5162777813d869182b139e83b10743caef15",
   "safetensors>=0.4.5",
   "torch>=2.8.0",
   "transformers>=4.56.0",

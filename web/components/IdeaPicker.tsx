@@ -16,7 +16,7 @@ export function IdeaPicker({ ideas }: Props) {
         </div>
         <h1>Choose a field. Generate the map live.</h1>
         <p>
-          Ten curated worlds, each with two visual axes. Pick one and the grid
+          Five curated worlds, each with two visual axes. Pick one and the grid
           appears as inference completes.
         </p>
       </section>
