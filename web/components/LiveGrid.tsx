@@ -30,11 +30,17 @@ export function LiveGrid({ idea }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [backend, setBackend] = useState<string>("waiting");
   const [elapsedMs, setElapsedMs] = useState(0);
+  const [runStartedAt, setRunStartedAt] = useState<number | null>(null);
+  const [liveElapsedMs, setLiveElapsedMs] = useState(0);
+  const [activeBatchSize, setActiveBatchSize] = useState(0);
+  const [progressText, setProgressText] = useState("Waiting for renderer");
   const started = useRef(false);
   const eventSource = useRef<EventSource | null>(null);
   const worldSeed = useMemo(() => stableSeed(idea.id), [idea.id]);
 
   const completed = Object.keys(cells).length;
+  const visibleElapsedMs = status === "running" || status === "starting" ? liveElapsedMs : elapsedMs;
+  const progressPercent = Math.round((completed / 9) * 100);
 
   const startGrid = useCallback(async () => {
     eventSource.current?.close();
@@ -45,6 +51,10 @@ export function LiveGrid({ idea }: Props) {
     setJobId(null);
     setBackend("starting");
     setElapsedMs(0);
+    setLiveElapsedMs(0);
+    setActiveBatchSize(0);
+    setProgressText("Starting renderer job");
+    setRunStartedAt(Date.now());
 
     try {
       const response = await fetch("/api/grid", {
@@ -67,6 +77,7 @@ export function LiveGrid({ idea }: Props) {
       setJobId(payload.jobId);
       setBackend(payload.backend);
       setStatus("running");
+      setProgressText("Waiting for first render batch");
 
       const source = new EventSource(`/api/grid/${payload.jobId}/events`);
       eventSource.current = source;
@@ -76,25 +87,41 @@ export function LiveGrid({ idea }: Props) {
           setCells((current) => ({ ...current, [event.index]: event }));
           setBackend(event.backend);
           setElapsedMs(event.elapsedMs);
+          setProgressText("Receiving rendered cells");
+        } else if (event.type === "progress") {
+          setBackend(event.backend);
+          setElapsedMs(event.elapsedMs);
+          setActiveBatchSize(event.batchSize);
+          setProgressText(
+            event.batchSize >= 9
+              ? "Rendering all 9 cells in one Flux batch"
+              : `Rendering next ${event.batchSize} cell${event.batchSize === 1 ? "" : "s"}`
+          );
         } else if (event.type === "done") {
           setStatus("done");
           setBackend(event.backend);
           setElapsedMs(event.elapsedMs);
+          setLiveElapsedMs(event.elapsedMs);
+          setActiveBatchSize(0);
+          setProgressText("Grid complete");
           source.close();
         } else if (event.type === "error") {
           setStatus("error");
           setError(event.message);
+          setProgressText("Generation failed");
           source.close();
         }
       };
       source.onerror = () => {
         setStatus("error");
         setError("Lost connection to the renderer event stream.");
+        setProgressText("Connection lost");
         source.close();
       };
     } catch (caught) {
       setStatus("error");
       setError(caught instanceof Error ? caught.message : "Grid generation failed.");
+      setProgressText("Generation failed");
     }
   }, [idea.id, worldSeed]);
 
@@ -104,6 +131,16 @@ export function LiveGrid({ idea }: Props) {
     }
     return () => eventSource.current?.close();
   }, [startGrid]);
+
+  useEffect(() => {
+    if (!runStartedAt || (status !== "starting" && status !== "running")) {
+      return;
+    }
+    const timer = window.setInterval(() => {
+      setLiveElapsedMs(Date.now() - runStartedAt);
+    }, 250);
+    return () => window.clearInterval(timer);
+  }, [runStartedAt, status]);
 
   return (
     <section className="gridStage">
@@ -140,8 +177,19 @@ export function LiveGrid({ idea }: Props) {
           </div>
           <div>
             <span>Elapsed</span>
-            <strong>{formatMs(elapsedMs)}</strong>
+            <strong>{formatMs(visibleElapsedMs)}</strong>
           </div>
+        </div>
+
+        <div className="progressBlock">
+          <div className="progressMeta">
+            <span>{statusLabel(status)}</span>
+            <strong>{progressPercent}%</strong>
+          </div>
+          <div className="progressTrack" aria-label="Generation progress">
+            <span style={{ width: `${progressPercent}%` }} />
+          </div>
+          <p>{activeBatchSize > 0 ? `${progressText}. Batch size ${activeBatchSize}.` : progressText}</p>
         </div>
 
         <div className="panelActions">
@@ -206,6 +254,22 @@ function formatMs(value: number): string {
     return "0.0s";
   }
   return `${(value / 1000).toFixed(1)}s`;
+}
+
+function statusLabel(status: "idle" | "starting" | "running" | "done" | "error"): string {
+  if (status === "starting") {
+    return "Starting";
+  }
+  if (status === "running") {
+    return "Generating";
+  }
+  if (status === "done") {
+    return "Complete";
+  }
+  if (status === "error") {
+    return "Error";
+  }
+  return "Idle";
 }
 
 function paletteStyle(palette: string[]): CSSProperties {

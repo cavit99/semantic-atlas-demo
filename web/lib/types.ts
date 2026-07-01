@@ -37,10 +37,21 @@ export type GridDoneEvent = {
   backend: string;
 };
 
+export type GridProgressEvent = {
+  type: "progress";
+  jobId: string;
+  phase: "rendering";
+  completed: number;
+  total: number;
+  batchSize: number;
+  elapsedMs: number;
+  backend: string;
+};
+
 export type GridErrorEvent = {
   type: "error";
   jobId: string;
   message: string;
 };
 
-export type GridEvent = GridCellEvent | GridDoneEvent | GridErrorEvent;
+export type GridEvent = GridCellEvent | GridDoneEvent | GridProgressEvent | GridErrorEvent;

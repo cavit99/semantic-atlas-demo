@@ -85,6 +85,18 @@ async def render_grid_job(job_id: str, idea, request: GridRequest) -> None:
     started = time.perf_counter()
     try:
         for batch in chunks(render_order(), max(1, renderer.grid_batch_size)):
+            await job.publish(
+                {
+                    "type": "progress",
+                    "jobId": job_id,
+                    "phase": "rendering",
+                    "completed": len([event for event in job.events if event.get("type") == "cell"]),
+                    "total": 9,
+                    "batchSize": len(batch),
+                    "elapsedMs": int((time.perf_counter() - started) * 1000),
+                    "backend": renderer.name,
+                }
+            )
             images = await renderer.render_many(
                 idea=idea,
                 points=batch,
