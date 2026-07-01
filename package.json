@@ -1,0 +1,11 @@
+{
+  "name": "semantic-atlas-demo",
+  "private": true,
+  "scripts": {
+    "dev:web": "npm --prefix web run dev",
+    "build:web": "npm --prefix web run build",
+    "lint:web": "npm --prefix web run lint",
+    "dev:renderer": "cd renderer && uv run semantic-atlas-demo-renderer",
+    "test:renderer": "cd renderer && uv run pytest"
+  }
+}

@@ -1,0 +1,212 @@
+[
+  {
+    "id": "lantern-market",
+    "title": "Lantern Market",
+    "family": "urban",
+    "scene": "A narrow market street with hanging lanterns, awnings, stalls, side alleys, layered building fronts, and a central walkway through the scene.",
+    "midpointPrompt": "A narrow market street with hanging lanterns, awnings, stalls, side alleys, layered building fronts, and a central walkway through the scene. Transitional architecture with traditional structure and clean modern details. Slightly elevated human view, not flat overhead and not fully eye-level.",
+    "xAxis": {
+      "negativeLabel": "medieval",
+      "positiveLabel": "modern",
+      "negativePrompt": "medieval masonry, timber frames, small arched openings",
+      "positivePrompt": "modern structure, clean lines, glass panels, simple frames"
+    },
+    "yAxis": {
+      "negativeLabel": "eye level",
+      "positiveLabel": "bird's eye",
+      "negativePrompt": "eye-level view, grounded foreground, horizon at human height",
+      "positivePrompt": "bird's-eye view, looking down across paths and roofs"
+    },
+    "palette": ["#f4b35e", "#2a9d8f", "#4d2d73", "#101014"],
+    "suffix": "rich illustrated surface, coherent non-photographic visual study"
+  },
+  {
+    "id": "cactus-courtyard",
+    "title": "Cactus Courtyard",
+    "family": "garden",
+    "scene": "A cactus garden in a walled court with gravel paths, sculptural plants, low plinths, surrounding walls, and a patch of sky above.",
+    "midpointPrompt": "A cactus garden in a walled court, with gravel paths, sculptural plants, low plinths, surrounding walls, and a patch of sky above. Moderate spacing between repeated elements and balanced weather, neither parched sun nor heavy rain.",
+    "xAxis": {
+      "negativeLabel": "sparse",
+      "positiveLabel": "dense",
+      "negativePrompt": "sparse arrangement, open gaps, few objects",
+      "positivePrompt": "dense arrangement, packed objects, close spacing"
+    },
+    "yAxis": {
+      "negativeLabel": "dry sun",
+      "positiveLabel": "misty rain",
+      "negativePrompt": "dry sunlit air, crisp shadows, warm gravel",
+      "positivePrompt": "misty rain, wet stone, softened distance, droplets on plants"
+    },
+    "palette": ["#d9c27e", "#50723c", "#b85c38", "#1c2a22"],
+    "suffix": "rich illustrated surface, hand-rendered botanical detail"
+  },
+  {
+    "id": "lava-shrine",
+    "title": "Lava Shrine",
+    "family": "landscape",
+    "scene": "A small shrine standing on a dark lava field with cracked ground, low volcanic ridges, sparse plants, and a wide sky around it.",
+    "midpointPrompt": "A small shrine standing on a dark lava field, with cracked ground, low volcanic ridges, sparse plants, and a wide sky around it. Mixed cloud cover and calm air, evening ambient light, neither overhead noon glare nor near-black midnight.",
+    "xAxis": {
+      "negativeLabel": "clear",
+      "positiveLabel": "stormy",
+      "negativePrompt": "clear sky, calm air, clean horizon",
+      "positivePrompt": "storm clouds, turbulent sky, windblown surfaces"
+    },
+    "yAxis": {
+      "negativeLabel": "noon",
+      "positiveLabel": "midnight",
+      "negativePrompt": "high noon light, short shadows, bright overhead sky",
+      "positivePrompt": "midnight darkness, sparse lights, dark upper space"
+    },
+    "palette": ["#f0713a", "#2f4858", "#f7d488", "#140f12"],
+    "suffix": "rich illustrated surface, dramatic volcanic atmosphere"
+  },
+  {
+    "id": "greenhouse-laboratory",
+    "title": "Greenhouse Laboratory",
+    "family": "garden",
+    "scene": "A plant laboratory greenhouse with benches, labeled pots, glass walls, irrigation lines, tools, and dense greenery around a central aisle.",
+    "midpointPrompt": "A plant laboratory greenhouse with benches, labeled pots, glass walls, irrigation lines, tools, and dense greenery around a central aisle. Lightly worn surfaces with a few marks, coherent non-photographic visual study with realistic space and visible hand-rendered treatment.",
+    "xAxis": {
+      "negativeLabel": "clean",
+      "positiveLabel": "grimy",
+      "negativePrompt": "clean surfaces, clear edges, no dirt buildup",
+      "positivePrompt": "grimy surfaces, stains, soot, dirty residue"
+    },
+    "yAxis": {
+      "negativeLabel": "photo",
+      "positiveLabel": "illustration",
+      "negativePrompt": "documentary photograph, camera realism, natural exposure",
+      "positivePrompt": "hand-rendered illustration, visible drawn marks, simplified painted surfaces"
+    },
+    "palette": ["#8bd3a8", "#f2f4d8", "#5f6f52", "#16302b"],
+    "suffix": "coherent visual study, stable greenhouse composition"
+  },
+  {
+    "id": "abstract-modern",
+    "title": "Abstract Modern Composition",
+    "family": "abstract",
+    "scene": "An abstract modern art composition with soft curves, angled planes, layered marks, visible edges, and a balanced central structure.",
+    "midpointPrompt": "An abstract modern art composition with soft curves, angled planes, layered marks, visible edges, and a balanced central structure. Moderate surface detail, neither plain nor heavily ornamented, clean illustrated rendering with ink-like edges and matte color areas.",
+    "xAxis": {
+      "negativeLabel": "plain",
+      "positiveLabel": "ornate",
+      "negativePrompt": "plain surfaces, simple repeated forms, minimal ornament",
+      "positivePrompt": "ornate surfaces, decorative details, carved repeated motifs"
+    },
+    "yAxis": {
+      "negativeLabel": "ink",
+      "positiveLabel": "gouache",
+      "negativePrompt": "ink drawing, crisp contour lines, hatch shading",
+      "positivePrompt": "gouache painting, opaque color blocks, matte brushwork"
+    },
+    "palette": ["#f2e8cf", "#386641", "#bc4749", "#202124"],
+    "suffix": "same-scene non-photographic visual study, no camera realism"
+  },
+  {
+    "id": "floating-islands",
+    "title": "Floating Islands",
+    "family": "speculative",
+    "scene": "Floating islands above water with cliffs, roots, small paths, bridges, reflections below, and clouds passing through the gaps.",
+    "midpointPrompt": "Floating islands above water, with cliffs, roots, small paths, bridges, reflections below, and clouds passing through the gaps. Medium-height proportions and balanced warm/cool color notes.",
+    "xAxis": {
+      "negativeLabel": "low",
+      "positiveLabel": "tall",
+      "negativePrompt": "low forms, horizontal emphasis, squat proportions",
+      "positivePrompt": "tall forms, vertical emphasis, high silhouettes"
+    },
+    "yAxis": {
+      "negativeLabel": "warm",
+      "positiveLabel": "cool",
+      "negativePrompt": "warm palette, ochres, reds, golden tones",
+      "positivePrompt": "cool palette, blues, teals, silvery tones"
+    },
+    "palette": ["#f6bd60", "#84a59d", "#577590", "#1b1b2f"],
+    "suffix": "rich illustrated surface, airy fantasy landscape"
+  },
+  {
+    "id": "industrial-spillway",
+    "title": "Industrial Spillway",
+    "family": "industrial",
+    "scene": "An industrial spillway interior with ramps, retaining walls, channels, catwalks, grates, and heavy concrete openings around a deep basin.",
+    "midpointPrompt": "An industrial spillway interior with ramps, retaining walls, channels, catwalks, grates, and heavy concrete openings around a deep basin. Light haze, distance still readable, balanced neutral palette with both warm and cool notes.",
+    "xAxis": {
+      "negativeLabel": "clear air",
+      "positiveLabel": "foggy",
+      "negativePrompt": "clear air, visible distance, sharp background",
+      "positivePrompt": "fog filling the scene, softened distance, pale haze"
+    },
+    "yAxis": {
+      "negativeLabel": "warm",
+      "positiveLabel": "cool",
+      "negativePrompt": "warm palette, ochres, reds, golden tones",
+      "positivePrompt": "cool palette, blues, teals, silvery tones"
+    },
+    "palette": ["#c98b4b", "#7798ab", "#3b4147", "#121416"],
+    "suffix": "rich illustrated surface, heavy concrete atmosphere"
+  },
+  {
+    "id": "harbor-quay",
+    "title": "Harbor Quay",
+    "family": "seascape",
+    "scene": "A small harbor quay with boats, stone edges, ropes, low buildings, water reflections, and a long open channel toward the horizon.",
+    "midpointPrompt": "A small harbor quay with boats, stone edges, ropes, low buildings, water reflections, and a long open channel toward the horizon. Calm-to-active water with readable structure, early evening light between dawn and night.",
+    "xAxis": {
+      "negativeLabel": "calm",
+      "positiveLabel": "stormy",
+      "negativePrompt": "calm water, soft ripples, still moored boats",
+      "positivePrompt": "stormy water, windblown spray, choppy waves"
+    },
+    "yAxis": {
+      "negativeLabel": "dawn",
+      "positiveLabel": "night",
+      "negativePrompt": "pale dawn light, low warm horizon, soft visibility",
+      "positivePrompt": "night harbor, dark water, lamps and reflected lights"
+    },
+    "palette": ["#8ecae6", "#fb8500", "#264653", "#0d1b2a"],
+    "suffix": "rich illustrated surface, maritime atmosphere"
+  },
+  {
+    "id": "library-reading-room",
+    "title": "Library Reading Room",
+    "family": "interior",
+    "scene": "A tall library reading room with long tables, shelves, lamps, balcony rails, ladders, and a central aisle leading into depth.",
+    "midpointPrompt": "A tall library reading room with long tables, shelves, lamps, balcony rails, ladders, and a central aisle leading into depth. Moderate occupancy and balanced mixed lighting, neither candle-only nor fully electric.",
+    "xAxis": {
+      "negativeLabel": "empty",
+      "positiveLabel": "crowded",
+      "negativePrompt": "empty room, open tables, no visible crowd",
+      "positivePrompt": "crowded room, many readers, occupied tables"
+    },
+    "yAxis": {
+      "negativeLabel": "candlelit",
+      "positiveLabel": "electric",
+      "negativePrompt": "candlelit glow, small warm pools of light, deep shadows",
+      "positivePrompt": "electric lights, even illumination, bright reading lamps"
+    },
+    "palette": ["#d6a75a", "#7f4f24", "#6d8ea0", "#1b1713"],
+    "suffix": "rich illustrated surface, quiet architectural interior"
+  },
+  {
+    "id": "rooftop-garden",
+    "title": "Rooftop Garden",
+    "family": "architecture",
+    "scene": "A rooftop garden with planters, paths, railings, water trays, seating, distant roofs, and layered plants around a central walkway.",
+    "midpointPrompt": "A rooftop garden with planters, paths, railings, water trays, seating, distant roofs, and layered plants around a central walkway. Balanced plant order, neither wild nor clipped, with a view between ground-level and aerial.",
+    "xAxis": {
+      "negativeLabel": "overgrown",
+      "positiveLabel": "manicured",
+      "negativePrompt": "overgrown plants, wild edges, dense loose foliage",
+      "positivePrompt": "manicured plants, clipped edges, orderly planting beds"
+    },
+    "yAxis": {
+      "negativeLabel": "ground view",
+      "positiveLabel": "aerial view",
+      "negativePrompt": "ground-level view, foreground plants large, human-height horizon",
+      "positivePrompt": "aerial view, looking down over paths and planters"
+    },
+    "palette": ["#a7c957", "#386641", "#e9c46a", "#242423"],
+    "suffix": "rich illustrated surface, calm rooftop atmosphere"
+  }
+]
