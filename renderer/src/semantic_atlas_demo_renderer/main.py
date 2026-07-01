@@ -5,6 +5,7 @@ import json
 import os
 import time
 from collections.abc import AsyncIterator
+from typing import TypeVar
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
@@ -26,6 +27,7 @@ app.add_middleware(
 
 renderer = create_renderer()
 jobs = JobStore()
+T = TypeVar("T")
 
 
 @app.get("/health")
@@ -82,29 +84,29 @@ async def render_grid_job(job_id: str, idea, request: GridRequest) -> None:
         return
     started = time.perf_counter()
     try:
-        for cell in render_order():
-            image = await renderer.render(
+        for batch in chunks(render_order(), max(1, renderer.grid_batch_size)):
+            images = await renderer.render_many(
                 idea=idea,
-                x=cell["x"],
-                y=cell["y"],
+                points=batch,
                 world_seed=request.worldSeed,
                 width=request.width,
                 height=request.height,
             )
-            await job.publish(
-                {
-                    "type": "cell",
-                    "jobId": job_id,
-                    "index": cell["index"],
-                    "row": cell["row"],
-                    "col": cell["col"],
-                    "x": cell["x"],
-                    "y": cell["y"],
-                    "imageUrl": image.imageUrl,
-                    "elapsedMs": int((time.perf_counter() - started) * 1000),
-                    "backend": renderer.name,
-                }
-            )
+            for cell, image in zip(batch, images, strict=True):
+                await job.publish(
+                    {
+                        "type": "cell",
+                        "jobId": job_id,
+                        "index": cell["index"],
+                        "row": cell["row"],
+                        "col": cell["col"],
+                        "x": cell["x"],
+                        "y": cell["y"],
+                        "imageUrl": image.imageUrl,
+                        "elapsedMs": int((time.perf_counter() - started) * 1000),
+                        "backend": renderer.name,
+                    }
+                )
         await job.finish(
             {
                 "type": "done",
@@ -156,6 +158,10 @@ def render_order() -> list[dict[str, int]]:
     order = [4, 3, 5, 1, 7, 0, 2, 6, 8]
     by_index = {cell["index"]: cell for cell in cells}
     return [by_index[index] for index in order]
+
+
+def chunks(items: list[T], size: int) -> list[list[T]]:
+    return [items[index : index + size] for index in range(0, len(items), size)]
 
 
 def main() -> None:

@@ -101,6 +101,7 @@ class Flux2KleinRenderer(Renderer):
             torch,
             os.environ.get("DEVICE", os.environ.get("ATLAS_RENDERER_DEVICE", "auto")),
         )
+        self.grid_batch_size = resolve_grid_batch_size(self.device)
 
         self.settings = InterpolationSettings(
             step_scale=float(os.environ.get("ATLAS_STEP_SCALE", "1.0")),
@@ -156,6 +157,104 @@ class Flux2KleinRenderer(Renderer):
             elapsedMs=int((time.perf_counter() - start) * 1000),
             backend=self.name,
         )
+
+    async def render_many(
+        self,
+        *,
+        idea: Idea,
+        points: list[dict[str, Any]],
+        world_seed: int,
+        width: int,
+        height: int,
+    ) -> list[RenderedImage]:
+        if not points:
+            return []
+        if len(points) == 1:
+            point = points[0]
+            return [
+                await self.render(
+                    idea=idea,
+                    x=float(point["x"]),
+                    y=float(point["y"]),
+                    world_seed=world_seed,
+                    width=width,
+                    height=height,
+                )
+            ]
+        if width % 16 != 0 or height % 16 != 0:
+            raise ValueError("width and height must be multiples of 16 for Flux2")
+
+        try:
+            return self._render_many_sync(
+                idea=idea,
+                points=points,
+                world_seed=world_seed,
+                width=width,
+                height=height,
+            )
+        except RuntimeError as error:
+            if not is_memory_error(error):
+                raise
+            self._clear_device_cache()
+            rendered: list[RenderedImage] = []
+            for point in points:
+                rendered.extend(
+                    await self.render_many(
+                        idea=idea,
+                        points=[point],
+                        world_seed=world_seed,
+                        width=width,
+                        height=height,
+                    )
+                )
+            return rendered
+
+    def _render_many_sync(
+        self,
+        *,
+        idea: Idea,
+        points: list[dict[str, Any]],
+        world_seed: int,
+        width: int,
+        height: int,
+    ) -> list[RenderedImage]:
+        started = time.perf_counter()
+        torch = self.torch
+        encoded = self._encoded_prompt_set(idea)
+        with torch.inference_mode():
+            ctx = torch.cat(
+                [
+                    interpolate_conditioning(
+                        encoded,
+                        x=float(point["x"]),
+                        y=float(point["y"]),
+                        settings=self.settings,
+                    )
+                    for point in points
+                ],
+                dim=0,
+            ).to(dtype=torch.bfloat16, device=self.device)
+            images = self._sample_batch(
+                ctx=ctx,
+                width=width,
+                height=height,
+                seeds=[world_seed for _point in points],
+            )
+
+        elapsed_ms = int((time.perf_counter() - started) * 1000)
+        return [
+            RenderedImage(
+                imageUrl=image_to_data_uri(image),
+                width=width,
+                height=height,
+                x=float(point["x"]),
+                y=float(point["y"]),
+                seed=world_seed,
+                elapsedMs=elapsed_ms,
+                backend=self.name,
+            )
+            for point, image in zip(points, images, strict=True)
+        ]
 
     def _encoded_prompt_set(self, idea: Idea) -> EncodedPromptSet:
         existing = self.encoded_by_idea.get(idea.id)
@@ -219,6 +318,16 @@ class Flux2KleinRenderer(Renderer):
         )
 
     def _sample(self, *, ctx: Any, width: int, height: int, seed: int) -> Image.Image:
+        return self._sample_batch(ctx=ctx, width=width, height=height, seeds=[seed])[0]
+
+    def _sample_batch(
+        self,
+        *,
+        ctx: Any,
+        width: int,
+        height: int,
+        seeds: list[int],
+    ) -> list[Image.Image]:
         import torch
         from einops import rearrange
         from flux2.sampling import (
@@ -231,11 +340,17 @@ class Flux2KleinRenderer(Renderer):
 
         ctx, ctx_ids = batched_prc_txt(ctx)
         shape = (1, 128, height // 16, width // 16)
-        noise = torch.randn(
-            shape,
-            generator=torch.Generator(device=self.device).manual_seed(seed),
-            dtype=torch.bfloat16,
-            device=self.device,
+        noise = torch.cat(
+            [
+                torch.randn(
+                    shape,
+                    generator=torch.Generator(device=self.device).manual_seed(seed),
+                    dtype=torch.bfloat16,
+                    device=self.device,
+                )
+                for seed in seeds
+            ],
+            dim=0,
         )
         x, x_ids = batched_prc_img(noise)
         timesteps = get_schedule(4, x.shape[1])
@@ -252,8 +367,19 @@ class Flux2KleinRenderer(Renderer):
         )
         x = torch.cat(scatter_ids(x, x_ids)).squeeze(2)
         decoded = self.ae.decode(x).float().clamp(-1, 1)
-        item = rearrange(decoded[0], "c h w -> h w c")
-        return Image.fromarray((127.5 * (item + 1.0)).cpu().byte().numpy())
+        images: list[Image.Image] = []
+        for item in decoded:
+            item = rearrange(item, "c h w -> h w c")
+            images.append(Image.fromarray((127.5 * (item + 1.0)).cpu().byte().numpy()))
+        return images
+
+    def _clear_device_cache(self) -> None:
+        torch = self.torch
+        device_type = self.device.type
+        if device_type == "cuda" and torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        elif device_type == "mps" and hasattr(torch, "mps"):
+            torch.mps.empty_cache()
 
 
 def configure_local_flux2_paths() -> None:
@@ -281,3 +407,27 @@ def resolve_device(torch: Any, requested: str):
     if torch.backends.mps.is_available():
         return torch.device("mps")
     return torch.device("cpu")
+
+
+def resolve_grid_batch_size(device: Any) -> int:
+    configured = os.environ.get("ATLAS_GRID_BATCH_SIZE")
+    if configured:
+        return max(1, int(configured))
+    device_type = getattr(device, "type", str(device))
+    if device_type == "cuda":
+        return 4
+    if device_type == "mps":
+        return 2
+    return 1
+
+
+def is_memory_error(error: RuntimeError) -> bool:
+    message = str(error).lower()
+    return "out of memory" in message or "mps backend out of memory" in message
+
+
+def image_to_data_uri(image: Image.Image) -> str:
+    buffer = io.BytesIO()
+    image.save(buffer, format="WEBP", quality=90)
+    encoded_image = base64.b64encode(buffer.getvalue()).decode("ascii")
+    return f"data:image/webp;base64,{encoded_image}"
