@@ -8,7 +8,7 @@ from types import SimpleNamespace
 import pytest
 from PIL import Image
 
-from semantic_atlas_demo_renderer.ideas import DEFAULT_STYLE_ANCHOR, load_ideas, prompt_set_for_idea
+from semantic_atlas_demo_renderer.ideas import DEFAULT_STYLE_ANCHOR, compose_prompt, load_ideas, prompt_set_for_idea
 from semantic_atlas_demo_renderer.interpolation import EncodedPromptSet, InterpolationSettings
 from semantic_atlas_demo_renderer.renderers import flux2_klein
 from semantic_atlas_demo_renderer.renderers.flux2_klein import Flux2KleinRenderer
@@ -34,6 +34,21 @@ def test_prompt_set_for_idea_builds_base_and_axis_endpoint_prompts() -> None:
     assert idea.xAxis.positivePrompt in prompt_set.x_positive
     assert idea.yAxis.negativePrompt in prompt_set.y_negative
     assert idea.yAxis.positivePrompt in prompt_set.y_positive
+
+
+def test_compose_prompt_uses_image_language_without_axis_metadata() -> None:
+    idea = load_ideas()[0]
+
+    center = compose_prompt(idea, x=0.0, y=0.0)
+    assert idea.xAxis.positivePrompt not in center
+    assert idea.yAxis.positivePrompt not in center
+    assert "axis" not in center.lower()
+
+    corner = compose_prompt(idea, x=0.5, y=-1.0)
+    assert f"moderate {idea.xAxis.positivePrompt}" in corner
+    assert f"strong {idea.yAxis.negativePrompt}" in corner
+    assert "axis" not in corner.lower()
+    assert "grid" not in corner.lower()
 
 
 def test_text_encoder_override_rejects_single_safetensors_file(

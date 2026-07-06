@@ -8,14 +8,14 @@
     "xAxis": {
       "negativeLabel": "medieval",
       "positiveLabel": "neon modern",
-      "negativePrompt": "medieval stone masonry, timber frames, cloth awnings, hand-painted signs, old market stalls",
-      "positivePrompt": "neon signs, glass storefronts, metal frames, modern panels"
+      "negativePrompt": "rough stone walls, timber-framed upper stories, canvas stall roofs, hand-painted wooden signs, iron lantern brackets, stacked barrels and crates",
+      "positivePrompt": "glowing neon shop signs, glass storefront windows, brushed metal frames, illuminated panels, sleek awnings, glossy contemporary street fixtures"
     },
     "yAxis": {
       "negativeLabel": "dry",
       "positiveLabel": "rainy",
-      "negativePrompt": "dry pavement, clear air, crisp shadows, clean fabric awnings",
-      "positivePrompt": "rainy street, wet reflective paving, puddles, misty air, dripping awnings"
+      "negativePrompt": "dry pale paving stones, crisp shadows, clear air, dry canvas awnings, dust on stall fronts",
+      "positivePrompt": "wet reflective paving stones, puddles in the walkway, misty air, rain streaks on glass, dripping awnings, lantern reflections"
     },
     "palette": ["#f4b35e", "#2a9d8f", "#4d2d73", "#101014"],
     "suffix": "rich illustrated surface, coherent non-photographic visual study"
@@ -29,14 +29,14 @@
     "xAxis": {
       "negativeLabel": "clean",
       "positiveLabel": "grimy",
-      "negativePrompt": "clean surfaces, clear edges, no dirt buildup",
-      "positivePrompt": "grimy surfaces, stains, soot, dirty residue"
+      "negativePrompt": "spotless glass panes, tidy benches, scrubbed tools, clean labeled pots, fresh white trays, swept central aisle",
+      "positivePrompt": "grimy glass panes, stained benches, dirty tools, soil spills, algae streaks, dark residue around pots and irrigation lines"
     },
     "yAxis": {
-      "negativeLabel": "natural",
-      "positiveLabel": "artificial",
-      "negativePrompt": "natural sunlight through glass, organic shadows, sunlit leaves, passive ventilation",
-      "positivePrompt": "artificial grow-light arrays, magenta and cyan LEDs, glowing equipment, controlled lab illumination"
+      "negativeLabel": "sunlit",
+      "positiveLabel": "LED-lit",
+      "negativePrompt": "warm sunlight through the glass roof, golden highlights on leaves, natural shadows, open vents, no colored lamps",
+      "positivePrompt": "magenta and cyan LED grow bars, glowing lamp rigs above benches, cool colored reflections on glass, illuminated cables and control panels"
     },
     "palette": ["#8bd3a8", "#f2f4d8", "#5f6f52", "#16302b"],
     "suffix": "coherent visual study, stable greenhouse composition"
@@ -50,14 +50,14 @@
     "xAxis": {
       "negativeLabel": "minimal",
       "positiveLabel": "ornate",
-      "negativePrompt": "large plain color fields, sparse geometry, wide negative space, few marks",
-      "positivePrompt": "dense decorative motifs, intricate patterning, many small repeated details"
+      "negativePrompt": "large unbroken color fields, sparse shapes, broad empty margins, few lines, quiet open composition",
+      "positivePrompt": "dense decorative motifs, intricate pattern tiles, fine repeated dots and curls, layered borders, many small marks"
     },
     "yAxis": {
       "negativeLabel": "ink",
       "positiveLabel": "gouache",
-      "negativePrompt": "monochrome ink drawing, crisp contour lines, hatch shading, visible linework",
-      "positivePrompt": "opaque gouache painting, saturated color blocks, matte brush texture"
+      "negativePrompt": "black ink on white paper, crisp contour lines, crosshatching, brush-pen strokes, visible dry ink edges",
+      "positivePrompt": "opaque gouache paint, matte saturated color blocks, soft brush texture, layered painted edges, visible pigment strokes"
     },
     "palette": ["#f2e8cf", "#386641", "#bc4749", "#202124"],
     "suffix": "same-scene non-photographic visual study, no camera realism"
@@ -71,14 +71,14 @@
     "xAxis": {
       "negativeLabel": "winter",
       "positiveLabel": "summer",
-      "negativePrompt": "winter frost, snow-dusted cliffs, bare branches, icy water, cold pale atmosphere",
-      "positivePrompt": "summer greenery, flowering plants, warm sunlight, lush foliage, clear blue water"
+      "negativePrompt": "snow on cliff ledges, frost on roots and bridges, bare trees, icy water edges, pale cold sky, blue-gray shadows",
+      "positivePrompt": "lush green grass on cliffs, leafy trees, flowering plants, warm sunlight, clear blue water, soft golden clouds"
     },
     "yAxis": {
       "negativeLabel": "ancient",
       "positiveLabel": "futuristic",
-      "negativePrompt": "ancient stone bridges, carved steps, weathered ruins, old masonry, worn shrine details",
-      "positivePrompt": "futuristic hovering platforms, clean metal walkways, soft glowing rails, sleek observation decks"
+      "negativePrompt": "weathered stone bridges, carved steps, mossy ruins, rope railings, worn shrine stones, cracked masonry paths",
+      "positivePrompt": "sleek metal bridges, hovering platforms, glass railings, soft glowing blue strips, clean observation decks, embedded light panels"
     },
     "palette": ["#f6bd60", "#84a59d", "#577590", "#1b1b2f"],
     "suffix": "rich illustrated surface, airy fantasy landscape"
@@ -92,14 +92,14 @@
     "xAxis": {
       "negativeLabel": "empty",
       "positiveLabel": "crowded",
-      "negativePrompt": "empty room, open tables, empty chairs, no visible readers, quiet aisles",
-      "positivePrompt": "crowded room, many readers, occupied chairs, figures at tables and balconies"
+      "negativePrompt": "empty reading tables, rows of empty chairs, closed books, untouched aisles, still lamps, no visible readers",
+      "positivePrompt": "many readers at tables, occupied chairs, open books and papers, figures on balconies, busy aisles, librarians moving between shelves"
     },
     "yAxis": {
       "negativeLabel": "dusty",
       "positiveLabel": "restored",
-      "negativePrompt": "dusty neglected shelves, faded rugs, scattered old papers, cobwebs, heavy dust in the air",
-      "positivePrompt": "restored polished wood, clean shelves, fresh labels, repaired railings, well-kept reading tables"
+      "negativePrompt": "dusty shelves, faded rugs, scattered old papers, cobwebbed corners, dull wood, hazy shafts of dust in warm light",
+      "positivePrompt": "polished wood tables, clean shelves, fresh book labels, repaired balcony rails, straightened chairs, clear warm light on well-kept surfaces"
     },
     "palette": ["#d6a75a", "#7f4f24", "#6d8ea0", "#1b1713"],
     "suffix": "rich illustrated surface, quiet architectural interior"
