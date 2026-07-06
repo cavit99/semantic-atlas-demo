@@ -53,4 +53,10 @@ BFL-compatible.
 - `ATLAS_GRID_BATCH_SIZE=3`: visible progress; `9` can be faster but updates at once.
 - `DEVICE=auto|mps|cuda|cpu`
 
+## Tests
+
+```bash
+npm run test:core
+```
+
 Model weights, generated images, and machine-specific paths are not committed.
