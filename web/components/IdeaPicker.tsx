@@ -12,7 +12,7 @@ export function IdeaPicker({ ideas }: Props) {
       <section className="homeIntro">
         <div className="brandLockup">
           <span className="brandMark" />
-          <span>Live demo</span>
+          <span>Image fields</span>
         </div>
         <h1>Semantic Atlas</h1>
         <p>

@@ -1,6 +1,6 @@
 # Semantic Atlas Demo
 
-A live hack-event demo of two-axis semantic control for image generation.
+An interactive demo of two-axis semantic control for image generation.
 
 Pick one of five scene presets, press **Generate grid**, and watch a 3x3 field
 render from two visual axes. The repo does not ship pre-rendered grids; each

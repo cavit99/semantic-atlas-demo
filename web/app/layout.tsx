@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Semantic Atlas Demo",
-  description: "Live 2D semantic image fields for a hacking event demo."
+  description: "Interactive 2D semantic image fields."
 };
 
 export const viewport: Viewport = {
