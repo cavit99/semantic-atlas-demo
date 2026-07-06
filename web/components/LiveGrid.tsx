@@ -33,7 +33,7 @@ export function LiveGrid({ idea }: Props) {
   const [runStartedAt, setRunStartedAt] = useState<number | null>(null);
   const [liveElapsedMs, setLiveElapsedMs] = useState(0);
   const [activeBatchSize, setActiveBatchSize] = useState(0);
-  const [progressText, setProgressText] = useState("Ready to generate");
+  const [progressText, setProgressText] = useState("Ready to generate.");
   const eventSource = useRef<EventSource | null>(null);
   const worldSeed = useMemo(() => stableSeed(idea.id), [idea.id]);
 
@@ -51,7 +51,7 @@ export function LiveGrid({ idea }: Props) {
     setElapsedMs(0);
     setLiveElapsedMs(0);
     setActiveBatchSize(0);
-    setProgressText("Starting renderer job");
+    setProgressText("Starting renderer job.");
     setRunStartedAt(Date.now());
 
     try {
@@ -75,7 +75,7 @@ export function LiveGrid({ idea }: Props) {
       setJobId(payload.jobId);
       setBackend(payload.backend);
       setStatus("running");
-      setProgressText("Waiting for first render batch");
+      setProgressText("Waiting for first render batch.");
 
       const source = new EventSource(`/api/grid/${payload.jobId}/events`);
       eventSource.current = source;
@@ -85,15 +85,15 @@ export function LiveGrid({ idea }: Props) {
           setCells((current) => ({ ...current, [event.index]: event }));
           setBackend(event.backend);
           setElapsedMs(event.elapsedMs);
-          setProgressText("Receiving rendered cells");
+          setProgressText("Receiving rendered cells.");
         } else if (event.type === "progress") {
           setBackend(event.backend);
           setElapsedMs(event.elapsedMs);
           setActiveBatchSize(event.batchSize);
           setProgressText(
             event.batchSize >= 9
-              ? "Rendering all 9 cells in one Flux batch"
-              : `Rendering next ${event.batchSize} cell${event.batchSize === 1 ? "" : "s"}`
+              ? "Rendering all 9 cells in one Flux batch."
+              : `Rendering next ${event.batchSize} cell${event.batchSize === 1 ? "" : "s"}.`
           );
         } else if (event.type === "done") {
           setStatus("done");
@@ -101,25 +101,25 @@ export function LiveGrid({ idea }: Props) {
           setElapsedMs(event.elapsedMs);
           setLiveElapsedMs(event.elapsedMs);
           setActiveBatchSize(0);
-          setProgressText("Grid complete");
+          setProgressText("Grid complete.");
           source.close();
         } else if (event.type === "error") {
           setStatus("error");
           setError(event.message);
-          setProgressText("Generation failed");
+          setProgressText("Generation failed.");
           source.close();
         }
       };
       source.onerror = () => {
         setStatus("error");
         setError("Lost connection to the renderer event stream.");
-        setProgressText("Connection lost");
+        setProgressText("Connection lost.");
         source.close();
       };
     } catch (caught) {
       setStatus("error");
       setError(caught instanceof Error ? caught.message : "Grid generation failed.");
-      setProgressText("Generation failed");
+      setProgressText("Generation failed.");
     }
   }, [idea.id, worldSeed]);
 
@@ -184,7 +184,7 @@ export function LiveGrid({ idea }: Props) {
           <div className="progressTrack" aria-label="Generation progress">
             <span style={{ width: `${progressPercent}%` }} />
           </div>
-          <p>{activeBatchSize > 0 ? `${progressText}. Batch size ${activeBatchSize}.` : progressText}</p>
+          <p>{activeBatchSize > 0 ? `${progressText} Batch size ${activeBatchSize}.` : progressText}</p>
         </div>
 
         <div className="panelActions">
@@ -269,7 +269,7 @@ function statusLabel(status: "idle" | "starting" | "running" | "done" | "error")
 
 function buttonLabel(status: "idle" | "starting" | "running" | "done" | "error"): string {
   if (status === "idle") {
-    return "Generate grid";
+    return "Generate 3x3 grid";
   }
   if (status === "starting" || status === "running") {
     return "Restart";

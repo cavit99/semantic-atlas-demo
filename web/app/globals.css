@@ -21,8 +21,8 @@ body {
 body {
   margin: 0;
   background:
-    radial-gradient(circle at 12% 10%, rgba(240, 179, 91, 0.16), transparent 28rem),
-    radial-gradient(circle at 88% 18%, rgba(42, 157, 143, 0.15), transparent 24rem),
+    linear-gradient(120deg, rgba(240, 179, 91, 0.12), transparent 34rem),
+    linear-gradient(235deg, rgba(42, 157, 143, 0.12), transparent 30rem),
     linear-gradient(145deg, #100f0d 0%, #161513 52%, #0d0d0c 100%);
   color: var(--ink);
   font-family:
@@ -57,6 +57,7 @@ a {
   gap: 10px;
   color: var(--muted);
   font-size: 13px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
@@ -74,7 +75,7 @@ a {
 .homeIntro h1 {
   max-width: 820px;
   margin: 0;
-  font-size: clamp(46px, 8vw, 116px);
+  font-size: clamp(58px, 10vw, 148px);
   line-height: 0.92;
   letter-spacing: 0;
 }
@@ -118,37 +119,49 @@ a {
 .tileVisual {
   position: relative;
   min-height: 142px;
+  overflow: hidden;
   background:
     linear-gradient(135deg, color-mix(in srgb, var(--p3) 82%, black 18%), transparent),
-    radial-gradient(circle at 25% 72%, color-mix(in srgb, var(--p0) 66%, transparent), transparent 36%),
-    radial-gradient(circle at 76% 28%, color-mix(in srgb, var(--p1) 68%, transparent), transparent 36%),
+    linear-gradient(90deg, color-mix(in srgb, var(--p0) 20%, transparent), transparent),
     linear-gradient(135deg, var(--p3), #111);
 }
 
-.orb {
+.miniGrid {
   position: absolute;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--p0);
-  filter: blur(1px);
-  opacity: 0.86;
+  inset: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
 }
 
-.orbA {
-  left: 18%;
-  top: 54%;
-  background: var(--p0);
+.miniCell {
+  min-width: 0;
+  border: 1px solid rgba(245, 240, 232, 0.18);
+  border-radius: 4px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--p0) 52%, var(--p3)), var(--p3));
+  opacity: 0.78;
 }
 
-.orbB {
-  right: 18%;
-  top: 18%;
-  background: var(--p2);
+.miniCell:nth-child(2),
+.miniCell:nth-child(4),
+.miniCell:nth-child(6),
+.miniCell:nth-child(8) {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--p1) 48%, var(--p3)), var(--p3));
+}
+
+.miniCell:nth-child(3),
+.miniCell:nth-child(7) {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--p2) 54%, var(--p3)), var(--p3));
+}
+
+.miniCell:nth-child(5) {
+  background: color-mix(in srgb, var(--p0) 34%, var(--p1) 28%);
+  opacity: 0.92;
 }
 
 .axisStroke {
   position: absolute;
+  z-index: 1;
   background: rgba(245, 240, 232, 0.65);
 }
 
@@ -213,6 +226,14 @@ a {
 .axisList dd {
   margin: 0;
   font-size: 13px;
+}
+
+.tileAction {
+  width: fit-content;
+  margin-top: 2px;
+  color: var(--ink);
+  font-size: 13px;
+  border-bottom: 1px solid color-mix(in srgb, var(--p0) 65%, white 8%);
 }
 
 .workspace {

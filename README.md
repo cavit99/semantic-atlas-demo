@@ -1,41 +1,58 @@
 # Semantic Atlas Demo
 
-A live-only hack-event demo of Semantic Atlas.
+A live hack-event demo of two-axis semantic control for image generation.
 
-The demo presents 5 curated atlas ideas. Selecting one starts live inference for a
-3x3 semantic field: x runs left-to-right, y runs bottom-to-top. No grids or
-images are pre-rendered into the repo.
+Pick one of five scene presets, press **Generate grid**, and watch a 3x3 field
+render from two visual axes. The repo does not ship pre-rendered grids; each
+cell is generated at request time by interpolating text-conditioning embeddings
+before the image model runs.
 
-## Shape
+## 10-Second Demo Script
 
-- `web/`: Next.js + React frontend.
-- `renderer/`: FastAPI renderer service with progressive grid jobs.
-- `data/ideas.json`: the 5 curated atlas ideas shared by both services.
+"Each preset has a neutral scene and two axes. We encode the neutral prompt and
+the axis endpoints with Qwen, blend those vectors for each x/y coordinate, then
+Flux2 Klein renders the nine points. The result is a live map of meaning, not
+nine separately written prompts."
 
-The frontend never talks in prompt-embedding terms. Its API is:
+## What It Shows
+
+- Five curated scene presets chosen for visible, compositional axis movement.
+- Manual generation: selecting a preset opens the workspace; inference starts
+  only when the operator presses **Generate grid**.
+- A 3x3 field where x runs left to right and y runs bottom to top.
+- Progressive rendering over server-sent events, with configurable grid batch
+  size for speed versus visible progress.
+- A clean backend boundary: the frontend asks for `ideaId + x/y + worldSeed`;
+  the renderer owns all model, embedding, batching, and image details.
+
+## Project Shape
 
 ```text
-ideaId + x/y + worldSeed -> image
+semantic-atlas-demo/
+  data/ideas.json     five shared demo presets
+  web/                Next.js + React frontend
+  renderer/           FastAPI renderer service
 ```
 
-The renderer owns model-specific details and can run different backends:
+The request path is intentionally simple:
 
-- `mock`: procedural live images for frontend development.
-- `auto`: uses a local model backend if dependencies/cache are available; otherwise mock.
-- `sdxl_mps`: optional local Apple Silicon Diffusers path.
-- `flux2_klein`: target Flux2 Klein 4B adapter for CUDA production work.
+```text
+browser -> Next.js API proxy -> FastAPI /grid job -> SSE progress/cell events -> browser
+```
 
-## Run
+## Run With Mock Images
 
-Start the renderer:
+Use this path for UI work and fast presentation checks.
+
+Terminal 1:
 
 ```bash
 cd /Users/caviterginsoy/Coding/semantic-atlas-demo/renderer
 uv sync
-uv run semantic-atlas-demo-renderer
+RENDER_BACKEND=mock uv run semantic-atlas-demo-renderer
 ```
 
-Start the web app:
+Terminal 2:
 
 ```bash
 cd /Users/caviterginsoy/Coding/semantic-atlas-demo/web
@@ -43,51 +60,71 @@ npm install
 npm run dev
 ```
 
-Open:
+Open [http://localhost:3000](http://localhost:3000).
 
-```text
-http://127.0.0.1:3000
-```
+## Run With Local Flux2 Klein
 
-## Backend Modes
-
-Default:
+Use this path for the real demo on Apple Silicon or CUDA. It uses the same UI and
+job API as mock mode.
 
 ```bash
-RENDER_BACKEND=auto uv run semantic-atlas-demo-renderer
-```
-
-Force mock:
-
-```bash
-RENDER_BACKEND=mock uv run semantic-atlas-demo-renderer
-```
-
-Target Flux2 Klein 4B:
-
-```bash
+cd /Users/caviterginsoy/Coding/semantic-atlas-demo/renderer
 uv sync --group local-models
-RENDER_BACKEND=flux2_klein DEVICE=auto uv run semantic-atlas-demo-renderer
+unset AE_MODEL_PATH
+ATLAS_GRID_BATCH_SIZE=3 RENDER_BACKEND=flux2_klein DEVICE=auto RELOAD=0 uv run semantic-atlas-demo-renderer
 ```
 
-When present, the renderer automatically points BFL's loader at the local
-ComfyUI Flux transformer instead of downloading it:
+The renderer automatically uses the local Flux2 Klein transformer when present:
 
 ```text
 /Users/caviterginsoy/ComfyUI/models/diffusion_models/flux-2-klein-4b.safetensors
 ```
 
-The local `qwen_3_4b.safetensors` file is wrapped with Qwen3 tokenizer/config
-files under `~/.cache/semantic-atlas-demo/qwen3-4b`. The ComfyUI
-`flux2-vae.safetensors` file uses Diffusers key names, so `AE_MODEL_PATH` should
-only be set to a BFL-compatible `ae.safetensors`; otherwise the BFL loader will
-use its normal `ae.safetensors` source.
+For Qwen, `FLUX2_TEXT_ENCODER_MODEL` may point to a Transformers model directory
+or repo id. A single `qwen_3_4b.safetensors` file is not enough by itself because
+the tokenizer and config files are also required. The current local wrapper path
+is:
 
-Experimental local MPS path:
-
-```bash
-RENDER_BACKEND=sdxl_mps DEVICE=mps uv run semantic-atlas-demo-renderer
+```text
+~/.cache/semantic-atlas-demo/qwen3-4b
 ```
 
-The model backends are intentionally behind the same job API, so the event demo
-can move from mock to MPS to CUDA without changing the frontend.
+Do not point `AE_MODEL_PATH` at the ComfyUI `flux2-vae.safetensors` file unless
+it has BFL-compatible key names. Leaving `AE_MODEL_PATH` unset lets the BFL
+loader use its normal VAE source.
+
+## Grid Batching
+
+`ATLAS_GRID_BATCH_SIZE` controls how many cells the renderer samples together.
+
+- `3` is the recommended demo setting: one visible batch at a time.
+- `9` can be faster, but all cells usually appear together.
+- `1` gives the clearest progress feedback and the slowest total render.
+
+If a Flux batch runs out of memory, the renderer clears the device cache and
+falls back to smaller per-cell rendering.
+
+## Backend Modes
+
+```bash
+RENDER_BACKEND=mock         # procedural live images for frontend development
+RENDER_BACKEND=auto         # tries a local cached model path, otherwise mock
+RENDER_BACKEND=sdxl_mps     # experimental Apple Silicon Diffusers path
+RENDER_BACKEND=flux2_klein  # Flux2 Klein 4B with custom embedding interpolation
+```
+
+The important production-facing idea is that model backends stay behind one job
+API, so the event demo can move from mock to local MPS to rented CUDA without
+changing the frontend.
+
+## Key Files
+
+- `data/ideas.json`: the five curated presets, scenes, axis labels, and endpoint
+  prompts.
+- `web/components/IdeaPicker.tsx`: preset chooser.
+- `web/components/LiveGrid.tsx`: manual generation, progress display, and 3x3
+  grid.
+- `renderer/src/semantic_atlas_demo_renderer/interpolation.py`: axis blending in
+  conditioning space.
+- `renderer/src/semantic_atlas_demo_renderer/renderers/flux2_klein.py`: local
+  Flux2 Klein/Qwen adapter and batch rendering.

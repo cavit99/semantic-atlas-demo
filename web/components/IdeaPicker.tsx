@@ -12,12 +12,12 @@ export function IdeaPicker({ ideas }: Props) {
       <section className="homeIntro">
         <div className="brandLockup">
           <span className="brandMark" />
-          <span>Semantic Atlas</span>
+          <span>Live demo</span>
         </div>
-        <h1>Choose a field. Generate the map live.</h1>
+        <h1>Semantic Atlas</h1>
         <p>
-          Five curated worlds, each with two visual axes. Pick one and the grid
-          appears as inference completes.
+          Pick one scene, then generate a live 3x3 image field across two visual
+          axes.
         </p>
       </section>
 
@@ -30,8 +30,11 @@ export function IdeaPicker({ ideas }: Props) {
             style={{ "--tile-index": index } as CSSProperties}
           >
             <div className="tileVisual" style={paletteStyle(idea.palette)}>
-              <span className="orb orbA" />
-              <span className="orb orbB" />
+              <div className="miniGrid" aria-hidden="true">
+                {Array.from({ length: 9 }).map((_, cellIndex) => (
+                  <span key={cellIndex} className="miniCell" />
+                ))}
+              </div>
               <span className="axisStroke axisStrokeX" />
               <span className="axisStroke axisStrokeY" />
             </div>
@@ -53,6 +56,7 @@ export function IdeaPicker({ ideas }: Props) {
                   </dd>
                 </div>
               </dl>
+              <span className="tileAction">Open preset</span>
             </div>
           </Link>
         ))}
