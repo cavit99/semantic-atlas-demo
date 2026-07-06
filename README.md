@@ -51,9 +51,11 @@ file is not enough. Set `AE_MODEL_PATH` only when the file is BFL-compatible.
 
 ## Settings
 
-- `RENDER_BACKEND=mock|auto|sdxl_mps|flux2_klein`
+- `RENDER_BACKEND=mock|auto|flux2_klein`
+- `RENDERER_URL`: web-to-renderer service base URL; defaults to `http://127.0.0.1:8791`
 - Batch size is selectable in the UI. The default is `25`.
 - `DEVICE=auto|mps|cuda|cpu`
+- `RELOAD=0|1`
 - `FLUX2_TEXT_ENCODER_MODEL`: optional Qwen Transformers directory or repo id.
 
 ## Tests

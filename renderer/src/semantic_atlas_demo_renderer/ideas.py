@@ -26,28 +26,6 @@ def get_idea(idea_id: str) -> Idea:
     raise KeyError(idea_id)
 
 
-def compose_prompt(idea: Idea, x: float, y: float) -> str:
-    x_prompt = idea.xAxis.positivePrompt if x >= 0 else idea.xAxis.negativePrompt
-    y_prompt = idea.yAxis.positivePrompt if y >= 0 else idea.yAxis.negativePrompt
-    x_weight = abs(x)
-    y_weight = abs(y)
-    parts = [idea.midpointPrompt]
-    if x_weight > 1e-6:
-        parts.append(f"{visual_weight(x_weight)} {x_prompt}")
-    if y_weight > 1e-6:
-        parts.append(f"{visual_weight(y_weight)} {y_prompt}")
-    parts.append(idea.suffix)
-    return ", ".join(part.strip() for part in parts if part.strip())
-
-
-def visual_weight(value: float) -> str:
-    if value < 0.34:
-        return "subtle"
-    if value < 0.67:
-        return "moderate"
-    return "strong"
-
-
 def compose_endpoint_prompt(midpoint_prompt: str, transform_prompt: str | None, suffix: str) -> str:
     parts = [
         midpoint_prompt.strip(),
