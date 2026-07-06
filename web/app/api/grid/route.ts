@@ -1,20 +1,35 @@
-import { NextResponse } from "next/server";
+import {
+  readJsonRequestBody,
+  rendererFailureResponse,
+  rendererResponseHeaders,
+  rendererUnavailableResponse
+} from "@/lib/route-helpers";
 import { proxyRenderer } from "@/lib/renderer";
 
 export async function POST(request: Request) {
-  const body = await request.text();
-  const response = await proxyRenderer("/grid", {
-    method: "POST",
-    body
-  });
-
-  if (!response.ok) {
-    const detail = await response.text();
-    return NextResponse.json(
-      { error: `renderer failed: ${response.status} ${detail}` },
-      { status: response.status }
-    );
+  const body = await readJsonRequestBody(request);
+  if (!body.ok) {
+    return body.response;
   }
 
-  return NextResponse.json(await response.json());
+  let response: Response;
+  try {
+    response = await proxyRenderer("/grid", {
+      method: "POST",
+      body: body.body,
+      headers: body.headers
+    });
+  } catch {
+    return rendererUnavailableResponse("grid");
+  }
+
+  if (!response.ok) {
+    return rendererFailureResponse(response, "grid");
+  }
+
+  return new Response(response.status === 204 || response.status === 205 ? null : response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: rendererResponseHeaders(response.headers)
+  });
 }

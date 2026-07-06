@@ -44,6 +44,7 @@ export type GridProgressEvent = {
   completed: number;
   total: number;
   batchSize: number;
+  indices: number[];
   elapsedMs: number;
   backend: string;
 };

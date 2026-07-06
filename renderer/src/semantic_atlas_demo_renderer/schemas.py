@@ -30,18 +30,17 @@ class PromptSetText(BaseModel):
     x_positive: str
     y_negative: str
     y_positive: str
-    x_negative_extreme: str | None = None
-    x_positive_extreme: str | None = None
-    y_negative_extreme: str | None = None
-    y_positive_extreme: str | None = None
 
 
 class GridRequest(BaseModel):
     ideaId: str
-    gridSize: Literal[3] = 3
+    gridSize: Literal[3, 5] = 5
     worldSeed: int = Field(ge=0)
+    batchSize: int = Field(default=25, ge=1, le=25)
     width: int = Field(default=512, ge=256, le=1024)
     height: int = Field(default=512, ge=256, le=1024)
+    xAxis: Axis | None = None
+    yAxis: Axis | None = None
 
 
 class CoordinateRequest(BaseModel):
@@ -51,11 +50,15 @@ class CoordinateRequest(BaseModel):
     worldSeed: int = Field(ge=0)
     width: int = Field(default=512, ge=256, le=1024)
     height: int = Field(default=512, ge=256, le=1024)
+    xAxis: Axis | None = None
+    yAxis: Axis | None = None
 
 
 class GridStartResponse(BaseModel):
     jobId: str
     backend: str
+    initialBatchSize: int
+    initialIndices: list[int]
 
 
 class RenderedImage(BaseModel):

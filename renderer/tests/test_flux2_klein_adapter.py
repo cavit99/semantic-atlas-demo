@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from PIL import Image
@@ -33,12 +34,6 @@ def test_prompt_set_for_idea_builds_base_and_axis_endpoint_prompts() -> None:
     assert idea.xAxis.positivePrompt in prompt_set.x_positive
     assert idea.yAxis.negativePrompt in prompt_set.y_negative
     assert idea.yAxis.positivePrompt in prompt_set.y_positive
-    assert prompt_set.x_negative_extreme is not None
-    assert prompt_set.x_positive_extreme is not None
-    assert prompt_set.y_negative_extreme is not None
-    assert prompt_set.y_positive_extreme is not None
-    assert "extreme endpoint transformation" in prompt_set.x_negative_extreme
-    assert idea.xAxis.negativePrompt in prompt_set.x_negative_extreme
 
 
 def test_text_encoder_override_rejects_single_safetensors_file(
@@ -77,11 +72,11 @@ def test_text_encoder_override_uses_local_transformers_directory(
     assert calls == [{"model_spec": tmp_path, "device": "test-device"}]
 
 
-def test_text_encoder_without_override_uses_flux2_loader(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_text_encoder_without_override_uses_flux2_loader_on_cuda(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("FLUX2_TEXT_ENCODER_MODEL", raising=False)
 
     renderer = Flux2KleinRenderer.__new__(Flux2KleinRenderer)
-    renderer.device = "test-device"
+    renderer.device = SimpleNamespace(type="cuda")
     renderer.model_name = "flux.2-klein-4b"
 
     def fake_loader(model_name: str, *, device: object) -> dict[str, object]:
@@ -89,7 +84,28 @@ def test_text_encoder_without_override_uses_flux2_loader(monkeypatch: pytest.Mon
 
     assert renderer._load_text_encoder(fake_loader) == {
         "model_name": "flux.2-klein-4b",
-        "device": "test-device",
+        "device": renderer.device,
+    }
+
+
+def test_text_encoder_without_override_uses_non_fp8_qwen_on_mps(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("FLUX2_TEXT_ENCODER_MODEL", raising=False)
+
+    renderer = Flux2KleinRenderer.__new__(Flux2KleinRenderer)
+    renderer.device = SimpleNamespace(type="mps")
+    renderer.model_name = "flux.2-klein-4b"
+
+    def fake_qwen_loader(model_spec: str) -> dict[str, object]:
+        return {"model_spec": model_spec, "device": renderer.device}
+
+    def forbidden_flux_loader(*_args: object, **_kwargs: object) -> object:
+        raise AssertionError("MPS must not use the Flux2 default FP8 text encoder loader")
+
+    monkeypatch.setattr(renderer, "_load_qwen3_embedder", fake_qwen_loader)
+
+    assert renderer._load_text_encoder(forbidden_flux_loader) == {
+        "model_spec": flux2_klein.MPS_SAFE_QWEN3_MODEL,
+        "device": renderer.device,
     }
 
 
@@ -107,7 +123,7 @@ def test_flux2_klein_render_uses_interpolated_conditioning_before_sampling() -> 
     renderer = Flux2KleinRenderer.__new__(Flux2KleinRenderer)
     renderer.torch = FakeTorch()
     renderer.device = "test-device"
-    renderer.settings = InterpolationSettings(edge_boost=0.0)
+    renderer.settings = InterpolationSettings()
     renderer._encoded_prompt_set = lambda _idea: encoded
 
     def fake_sample(*, ctx: FakeTensor, width: int, height: int, seed: int) -> Image.Image:
@@ -138,3 +154,19 @@ def test_flux2_klein_render_uses_interpolated_conditioning_before_sampling() -> 
     assert isinstance(ctx, FakeTensor)
     assert ctx.value == 7.0
     assert ctx.to_calls == [{"dtype": "bf16", "device": "test-device"}]
+
+
+def test_encoded_prompt_cache_key_changes_when_axes_change() -> None:
+    idea = load_ideas()[0]
+    changed = idea.model_copy(
+        update={
+            "xAxis": idea.xAxis.model_copy(
+                update={
+                    "negativeLabel": "matte",
+                    "negativePrompt": "flat matte surfaces",
+                }
+            )
+        }
+    )
+
+    assert flux2_klein.encoded_prompt_cache_key(idea) != flux2_klein.encoded_prompt_cache_key(changed)

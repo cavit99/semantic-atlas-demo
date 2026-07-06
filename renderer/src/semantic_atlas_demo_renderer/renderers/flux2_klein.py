@@ -21,6 +21,7 @@ from .base import Renderer
 
 QWEN3_OUTPUT_LAYERS = (9, 18, 27)
 QWEN3_MAX_LENGTH = 512
+MPS_SAFE_QWEN3_MODEL = "Qwen/Qwen3-4B"
 
 
 class LocalQwen3Embedder:
@@ -98,13 +99,7 @@ class Flux2KleinRenderer(Renderer):
         )
         self.grid_batch_size = resolve_grid_batch_size(self.device)
 
-        self.settings = InterpolationSettings(
-            step_scale=float(os.environ.get("ATLAS_STEP_SCALE", "1.0")),
-            x_gain=float(os.environ.get("ATLAS_X_GAIN", "1.35")),
-            y_gain=float(os.environ.get("ATLAS_Y_GAIN", "1.35")),
-            edge_start=float(os.environ.get("ATLAS_EDGE_START", "0.35")),
-            edge_boost=float(os.environ.get("ATLAS_EDGE_BOOST", "1.25")),
-        )
+        self.settings = InterpolationSettings()
         self.encoded_by_idea: dict[str, EncodedPromptSet] = {}
 
         self.text_encoder = self._load_text_encoder(load_text_encoder)
@@ -252,30 +247,38 @@ class Flux2KleinRenderer(Renderer):
         ]
 
     def _encoded_prompt_set(self, idea: Idea) -> EncodedPromptSet:
-        existing = self.encoded_by_idea.get(idea.id)
+        cache_key = encoded_prompt_cache_key(idea)
+        existing = self.encoded_by_idea.get(cache_key)
         if existing is not None:
             return existing
         encoded = self._encode_prompt_set(prompt_set_for_idea(idea))
-        self.encoded_by_idea[idea.id] = encoded
+        self.encoded_by_idea[cache_key] = encoded
         return encoded
 
     def _load_text_encoder(self, load_text_encoder: Any) -> Any:
         model_spec = os.environ.get("FLUX2_TEXT_ENCODER_MODEL")
         if model_spec:
-            model_path = Path(model_spec).expanduser()
-            if model_path.exists() and model_path.is_file():
-                raise RuntimeError(
-                    "FLUX2_TEXT_ENCODER_MODEL must point to a Transformers model directory or repo id. "
-                    "A single qwen_3_4b.safetensors file is not enough because tokenizer/config files are also needed."
-                )
-            if model_path.exists():
-                return LocalQwen3Embedder(model_path, device=self.device)
+            return self._load_qwen3_embedder(model_spec)
 
-            from flux2.text_encoder import Qwen3Embedder
+        device_type = getattr(self.device, "type", str(self.device))
+        if device_type in {"cuda", "xpu"}:
+            return load_text_encoder(self.model_name, device=self.device)
 
-            return Qwen3Embedder(model_spec=model_spec, device=self.device)
+        return self._load_qwen3_embedder(MPS_SAFE_QWEN3_MODEL)
 
-        return load_text_encoder(self.model_name, device=self.device)
+    def _load_qwen3_embedder(self, model_spec: str) -> Any:
+        model_path = Path(model_spec).expanduser()
+        if model_path.exists() and model_path.is_file():
+            raise RuntimeError(
+                "FLUX2_TEXT_ENCODER_MODEL must point to a Transformers model directory or repo id. "
+                "A single qwen_3_4b.safetensors file is not enough because tokenizer/config files are also needed."
+            )
+        if model_path.exists():
+            return LocalQwen3Embedder(model_path, device=self.device)
+
+        from flux2.text_encoder import Qwen3Embedder
+
+        return Qwen3Embedder(model_spec=model_spec, device=self.device)
 
     def _encode_prompt_set(self, prompt_set: PromptSetText) -> EncodedPromptSet:
         torch = self.torch
@@ -285,10 +288,6 @@ class Flux2KleinRenderer(Renderer):
             ("x_positive", prompt_set.x_positive),
             ("y_negative", prompt_set.y_negative),
             ("y_positive", prompt_set.y_positive),
-            ("x_negative_extreme", prompt_set.x_negative_extreme),
-            ("x_positive_extreme", prompt_set.x_positive_extreme),
-            ("y_negative_extreme", prompt_set.y_negative_extreme),
-            ("y_positive_extreme", prompt_set.y_positive_extreme),
         ]
         active = [(name, value) for name, value in fields if value]
         with torch.inference_mode():
@@ -303,10 +302,6 @@ class Flux2KleinRenderer(Renderer):
             x_positive=by_name["x_positive"],
             y_negative=by_name["y_negative"],
             y_positive=by_name["y_positive"],
-            x_negative_extreme=by_name.get("x_negative_extreme"),
-            x_positive_extreme=by_name.get("x_positive_extreme"),
-            y_negative_extreme=by_name.get("y_negative_extreme"),
-            y_positive_extreme=by_name.get("y_positive_extreme"),
         )
 
     def _sample(self, *, ctx: Any, width: int, height: int, seed: int) -> Image.Image:
@@ -390,16 +385,8 @@ def resolve_device(torch: Any, requested: str):
     return torch.device("cpu")
 
 
-def resolve_grid_batch_size(device: Any) -> int:
-    configured = os.environ.get("ATLAS_GRID_BATCH_SIZE")
-    if configured:
-        return max(1, int(configured))
-    device_type = getattr(device, "type", str(device))
-    if device_type == "cuda":
-        return 4
-    if device_type == "mps":
-        return 2
-    return 1
+def resolve_grid_batch_size(_device: Any) -> int:
+    return 9
 
 
 def is_memory_error(error: RuntimeError) -> bool:
@@ -412,3 +399,21 @@ def image_to_data_uri(image: Image.Image) -> str:
     image.save(buffer, format="WEBP", quality=90)
     encoded_image = base64.b64encode(buffer.getvalue()).decode("ascii")
     return f"data:image/webp;base64,{encoded_image}"
+
+
+def encoded_prompt_cache_key(idea: Idea) -> str:
+    return "|".join(
+        [
+            idea.id,
+            idea.midpointPrompt,
+            idea.xAxis.negativeLabel,
+            idea.xAxis.positiveLabel,
+            idea.xAxis.negativePrompt,
+            idea.xAxis.positivePrompt,
+            idea.yAxis.negativeLabel,
+            idea.yAxis.positiveLabel,
+            idea.yAxis.negativePrompt,
+            idea.yAxis.positivePrompt,
+            idea.suffix,
+        ]
+    )

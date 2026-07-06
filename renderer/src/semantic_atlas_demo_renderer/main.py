@@ -15,7 +15,7 @@ from fastapi.responses import StreamingResponse
 from .ideas import get_idea, load_ideas
 from .jobs import JobStore
 from .renderers.factory import create_renderer
-from .schemas import CoordinateRequest, GridRequest, GridStartResponse
+from .schemas import CoordinateRequest, GridRequest, GridStartResponse, Idea
 
 app = FastAPI(title="Semantic Atlas Demo Renderer")
 app.add_middleware(
@@ -43,13 +43,19 @@ async def ideas() -> dict[str, object]:
 @app.post("/grid", response_model=GridStartResponse)
 async def start_grid(request: GridRequest) -> GridStartResponse:
     try:
-        idea = get_idea(request.ideaId)
+        idea = idea_for_request(get_idea(request.ideaId), request)
     except KeyError as error:
         raise HTTPException(status_code=404, detail=f"unknown idea '{request.ideaId}'") from error
 
     job = jobs.create(renderer.name)
+    first_batch = chunks(render_order(request.gridSize), request.batchSize)[0]
     asyncio.create_task(render_grid_job(job.id, idea, request))
-    return GridStartResponse(jobId=job.id, backend=renderer.name)
+    return GridStartResponse(
+        jobId=job.id,
+        backend=renderer.name,
+        initialBatchSize=len(first_batch),
+        initialIndices=[cell["index"] for cell in first_batch],
+    )
 
 
 @app.get("/grid/{job_id}/events")
@@ -63,7 +69,7 @@ async def grid_events(job_id: str) -> StreamingResponse:
 @app.post("/render-coordinate")
 async def render_coordinate(request: CoordinateRequest) -> dict[str, object]:
     try:
-        idea = get_idea(request.ideaId)
+        idea = idea_for_request(get_idea(request.ideaId), request)
     except KeyError as error:
         raise HTTPException(status_code=404, detail=f"unknown idea '{request.ideaId}'") from error
 
@@ -84,15 +90,17 @@ async def render_grid_job(job_id: str, idea, request: GridRequest) -> None:
         return
     started = time.perf_counter()
     try:
-        for batch in chunks(render_order(), max(1, renderer.grid_batch_size)):
+        total = request.gridSize * request.gridSize
+        for batch in chunks(render_order(request.gridSize), request.batchSize):
             await job.publish(
                 {
                     "type": "progress",
                     "jobId": job_id,
                     "phase": "rendering",
                     "completed": len([event for event in job.events if event.get("type") == "cell"]),
-                    "total": 9,
+                    "total": total,
                     "batchSize": len(batch),
+                    "indices": [cell["index"] for cell in batch],
                     "elapsedMs": int((time.perf_counter() - started) * 1000),
                     "backend": renderer.name,
                 }
@@ -157,25 +165,43 @@ async def event_stream(job_id: str) -> AsyncIterator[str]:
             break
 
 
-def render_order() -> list[dict[str, int]]:
+def render_order(grid_size: int) -> list[dict[str, int | float]]:
+    center = (grid_size - 1) / 2
     cells = [
-        {"index": 0, "row": 0, "col": 0, "x": -1, "y": 1},
-        {"index": 1, "row": 0, "col": 1, "x": 0, "y": 1},
-        {"index": 2, "row": 0, "col": 2, "x": 1, "y": 1},
-        {"index": 3, "row": 1, "col": 0, "x": -1, "y": 0},
-        {"index": 4, "row": 1, "col": 1, "x": 0, "y": 0},
-        {"index": 5, "row": 1, "col": 2, "x": 1, "y": 0},
-        {"index": 6, "row": 2, "col": 0, "x": -1, "y": -1},
-        {"index": 7, "row": 2, "col": 1, "x": 0, "y": -1},
-        {"index": 8, "row": 2, "col": 2, "x": 1, "y": -1},
+        {
+            "index": row * grid_size + col,
+            "row": row,
+            "col": col,
+            "x": -1 + (2 * col / (grid_size - 1)),
+            "y": 1 - (2 * row / (grid_size - 1)),
+        }
+        for row in range(grid_size)
+        for col in range(grid_size)
     ]
-    order = [4, 3, 5, 1, 7, 0, 2, 6, 8]
-    by_index = {cell["index"]: cell for cell in cells}
-    return [by_index[index] for index in order]
+    return sorted(
+        cells,
+        key=lambda cell: (
+            abs(float(cell["row"]) - center) + abs(float(cell["col"]) - center),
+            abs(float(cell["row"]) - center),
+            abs(float(cell["col"]) - center),
+            int(cell["index"]),
+        ),
+    )
 
 
 def chunks(items: list[T], size: int) -> list[list[T]]:
     return [items[index : index + size] for index in range(0, len(items), size)]
+
+
+def idea_for_request(idea: Idea, request: GridRequest | CoordinateRequest) -> Idea:
+    updates = {}
+    if request.xAxis is not None:
+        updates["xAxis"] = request.xAxis
+    if request.yAxis is not None:
+        updates["yAxis"] = request.yAxis
+    if not updates:
+        return idea
+    return idea.model_copy(update=updates)
 
 
 def main() -> None:

@@ -4,18 +4,18 @@
     "title": "Lantern Market",
     "family": "urban",
     "scene": "A narrow market street with hanging lanterns, awnings, stalls, side alleys, layered building fronts, and a central walkway through the scene.",
-    "midpointPrompt": "A narrow market street with hanging lanterns, awnings, stalls, side alleys, layered building fronts, and a central walkway through the scene. Transitional architecture with traditional structure and clean modern details. Slightly elevated human view, not flat overhead and not fully eye-level.",
+    "midpointPrompt": "A narrow market street with hanging lanterns, awnings, stalls, side alleys, layered building fronts, and a central walkway through the scene. Mixed old and contemporary storefront details, clear readable depth, and balanced late-afternoon light.",
     "xAxis": {
       "negativeLabel": "medieval",
-      "positiveLabel": "modern",
-      "negativePrompt": "medieval masonry, timber frames, small arched openings",
-      "positivePrompt": "modern structure, clean lines, glass panels, simple frames"
+      "positiveLabel": "neon modern",
+      "negativePrompt": "medieval stone masonry, timber frames, cloth awnings, hand-painted signs, old market stalls",
+      "positivePrompt": "neon signs, glass storefronts, metal frames, modern panels"
     },
     "yAxis": {
-      "negativeLabel": "eye level",
-      "positiveLabel": "bird's eye",
-      "negativePrompt": "eye-level view, grounded foreground, horizon at human height",
-      "positivePrompt": "bird's-eye view, looking down across paths and roofs"
+      "negativeLabel": "dry",
+      "positiveLabel": "rainy",
+      "negativePrompt": "dry pavement, clear air, crisp shadows, clean fabric awnings",
+      "positivePrompt": "rainy street, wet reflective paving, puddles, misty air, dripping awnings"
     },
     "palette": ["#f4b35e", "#2a9d8f", "#4d2d73", "#101014"],
     "suffix": "rich illustrated surface, coherent non-photographic visual study"
@@ -33,10 +33,10 @@
       "positivePrompt": "grimy surfaces, stains, soot, dirty residue"
     },
     "yAxis": {
-      "negativeLabel": "daylight",
-      "positiveLabel": "grow lights",
-      "negativePrompt": "soft daylight through glass, natural shadows, sunlit leaves",
-      "positivePrompt": "electric grow lights, magenta and cyan lamps, glowing equipment"
+      "negativeLabel": "natural",
+      "positiveLabel": "artificial",
+      "negativePrompt": "natural sunlight through glass, organic shadows, sunlit leaves, passive ventilation",
+      "positivePrompt": "artificial grow-light arrays, magenta and cyan LEDs, glowing equipment, controlled lab illumination"
     },
     "palette": ["#8bd3a8", "#f2f4d8", "#5f6f52", "#16302b"],
     "suffix": "coherent visual study, stable greenhouse composition"
@@ -46,18 +46,18 @@
     "title": "Abstract Modern Composition",
     "family": "abstract",
     "scene": "An abstract modern art composition with soft curves, angled planes, layered marks, visible edges, and a balanced central structure.",
-    "midpointPrompt": "An abstract modern art composition with soft curves, angled planes, layered marks, visible edges, and a balanced central structure. Moderate surface detail, neither plain nor heavily ornamented, clean illustrated rendering with ink-like edges and matte color areas.",
+    "midpointPrompt": "An abstract modern art composition with soft curves, angled planes, layered marks, visible edges, and a balanced central structure. Moderate surface density, balanced line and color, neither sparse nor heavily decorated.",
     "xAxis": {
-      "negativeLabel": "plain",
+      "negativeLabel": "minimal",
       "positiveLabel": "ornate",
-      "negativePrompt": "plain surfaces, simple repeated forms, minimal ornament",
-      "positivePrompt": "ornate surfaces, decorative details, carved repeated motifs"
+      "negativePrompt": "large plain color fields, sparse geometry, wide negative space, few marks",
+      "positivePrompt": "dense decorative motifs, intricate patterning, many small repeated details"
     },
     "yAxis": {
       "negativeLabel": "ink",
       "positiveLabel": "gouache",
-      "negativePrompt": "ink drawing, crisp contour lines, hatch shading",
-      "positivePrompt": "gouache painting, opaque color blocks, matte brushwork"
+      "negativePrompt": "monochrome ink drawing, crisp contour lines, hatch shading, visible linework",
+      "positivePrompt": "opaque gouache painting, saturated color blocks, matte brush texture"
     },
     "palette": ["#f2e8cf", "#386641", "#bc4749", "#202124"],
     "suffix": "same-scene non-photographic visual study, no camera realism"
@@ -69,16 +69,16 @@
     "scene": "Floating islands above water with cliffs, roots, small paths, bridges, reflections below, and clouds passing through the gaps.",
     "midpointPrompt": "Floating islands above water, with cliffs, roots, small paths, bridges, reflections below, and clouds passing through the gaps. Medium-height proportions and balanced warm/cool color notes.",
     "xAxis": {
-      "negativeLabel": "low",
-      "positiveLabel": "tall",
-      "negativePrompt": "low forms, horizontal emphasis, squat proportions",
-      "positivePrompt": "tall forms, vertical emphasis, high silhouettes"
+      "negativeLabel": "winter",
+      "positiveLabel": "summer",
+      "negativePrompt": "winter frost, snow-dusted cliffs, bare branches, icy water, cold pale atmosphere",
+      "positivePrompt": "summer greenery, flowering plants, warm sunlight, lush foliage, clear blue water"
     },
     "yAxis": {
-      "negativeLabel": "warm",
-      "positiveLabel": "cool",
-      "negativePrompt": "warm palette, ochres, reds, golden tones",
-      "positivePrompt": "cool palette, blues, teals, silvery tones"
+      "negativeLabel": "ancient",
+      "positiveLabel": "futuristic",
+      "negativePrompt": "ancient stone bridges, carved steps, weathered ruins, old masonry, worn shrine details",
+      "positivePrompt": "futuristic hovering platforms, clean metal walkways, soft glowing rails, sleek observation decks"
     },
     "palette": ["#f6bd60", "#84a59d", "#577590", "#1b1b2f"],
     "suffix": "rich illustrated surface, airy fantasy landscape"
@@ -88,18 +88,18 @@
     "title": "Library Reading Room",
     "family": "interior",
     "scene": "A tall library reading room with long tables, shelves, lamps, balcony rails, ladders, and a central aisle leading into depth.",
-    "midpointPrompt": "A tall library reading room with long tables, shelves, lamps, balcony rails, ladders, and a central aisle leading into depth. Moderate occupancy and balanced mixed lighting, neither candle-only nor fully electric.",
+    "midpointPrompt": "A tall library reading room with long tables, shelves, lamps, balcony rails, ladders, and a central aisle leading into depth. Moderate occupancy, maintained but gently aged surfaces, and balanced warm interior light.",
     "xAxis": {
       "negativeLabel": "empty",
       "positiveLabel": "crowded",
-      "negativePrompt": "empty room, open tables, no visible crowd",
-      "positivePrompt": "crowded room, many readers, occupied tables"
+      "negativePrompt": "empty room, open tables, empty chairs, no visible readers, quiet aisles",
+      "positivePrompt": "crowded room, many readers, occupied chairs, figures at tables and balconies"
     },
     "yAxis": {
-      "negativeLabel": "candlelit",
-      "positiveLabel": "electric",
-      "negativePrompt": "candlelit glow, small warm pools of light, deep shadows",
-      "positivePrompt": "electric lights, even illumination, bright reading lamps"
+      "negativeLabel": "dusty",
+      "positiveLabel": "restored",
+      "negativePrompt": "dusty neglected shelves, faded rugs, scattered old papers, cobwebs, heavy dust in the air",
+      "positivePrompt": "restored polished wood, clean shelves, fresh labels, repaired railings, well-kept reading tables"
     },
     "palette": ["#d6a75a", "#7f4f24", "#6d8ea0", "#1b1713"],
     "suffix": "rich illustrated surface, quiet architectural interior"

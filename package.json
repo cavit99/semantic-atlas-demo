@@ -7,6 +7,6 @@
     "lint:web": "npm --prefix web run lint",
     "dev:renderer": "cd renderer && uv run semantic-atlas-demo-renderer",
     "test:renderer": "cd renderer && uv run pytest",
-    "test:core": "npm run test:renderer && npm run build:web"
+    "test:core": "npm run test:renderer && npm --prefix web run test && npm --prefix web run lint && npm run build:web"
   }
 }

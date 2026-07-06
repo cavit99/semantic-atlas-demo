@@ -50,18 +50,6 @@ def compose_endpoint_prompt(midpoint_prompt: str, transform_prompt: str | None, 
     return ", ".join(part for part in parts if part)
 
 
-def compose_extreme_endpoint_prompt(midpoint_prompt: str, transform_prompt: str, suffix: str) -> str:
-    parts = [
-        midpoint_prompt.strip(),
-        f"extreme endpoint transformation: {transform_prompt.strip()}",
-        f"make this axis state visually dominant and unmistakable: {transform_prompt.strip()}",
-        "strong separation from the neutral midpoint, obvious edge-of-map visual change",
-        DEFAULT_STYLE_ANCHOR,
-        suffix.strip(),
-    ]
-    return ", ".join(part for part in parts if part)
-
-
 def prompt_set_for_idea(idea: Idea) -> PromptSetText:
     return PromptSetText(
         base=compose_endpoint_prompt(idea.midpointPrompt, None, idea.suffix),
@@ -69,24 +57,4 @@ def prompt_set_for_idea(idea: Idea) -> PromptSetText:
         x_positive=compose_endpoint_prompt(idea.midpointPrompt, idea.xAxis.positivePrompt, idea.suffix),
         y_negative=compose_endpoint_prompt(idea.midpointPrompt, idea.yAxis.negativePrompt, idea.suffix),
         y_positive=compose_endpoint_prompt(idea.midpointPrompt, idea.yAxis.positivePrompt, idea.suffix),
-        x_negative_extreme=compose_extreme_endpoint_prompt(
-            idea.midpointPrompt,
-            idea.xAxis.negativePrompt,
-            idea.suffix,
-        ),
-        x_positive_extreme=compose_extreme_endpoint_prompt(
-            idea.midpointPrompt,
-            idea.xAxis.positivePrompt,
-            idea.suffix,
-        ),
-        y_negative_extreme=compose_extreme_endpoint_prompt(
-            idea.midpointPrompt,
-            idea.yAxis.negativePrompt,
-            idea.suffix,
-        ),
-        y_positive_extreme=compose_extreme_endpoint_prompt(
-            idea.midpointPrompt,
-            idea.yAxis.positivePrompt,
-            idea.suffix,
-        ),
     )

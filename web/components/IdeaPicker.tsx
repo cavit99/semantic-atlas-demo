@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { CSSProperties } from "react";
 import type { DemoIdea } from "@/lib/types";
 
@@ -12,12 +13,11 @@ export function IdeaPicker({ ideas }: Props) {
       <section className="homeIntro">
         <div className="brandLockup">
           <span className="brandMark" />
-          <span>Image fields</span>
+          <span>Semantic Atlas</span>
         </div>
-        <h1>Semantic Atlas</h1>
         <p>
-          Pick one scene, then generate a live 3x3 image field across two visual
-          axes.
+          Choose a scene.{" "}
+          <span>Generate a navigable 5x5 image atlas across two visual axes.</span>
         </p>
       </section>
 
@@ -30,13 +30,13 @@ export function IdeaPicker({ ideas }: Props) {
             style={{ "--tile-index": index } as CSSProperties}
           >
             <div className="tileVisual" style={paletteStyle(idea.palette)}>
-              <div className="miniGrid" aria-hidden="true">
-                {Array.from({ length: 9 }).map((_, cellIndex) => (
-                  <span key={cellIndex} className="miniCell" />
-                ))}
-              </div>
-              <span className="axisStroke axisStrokeX" />
-              <span className="axisStroke axisStrokeY" />
+              <Image
+                src={`/previews/${idea.id}.webp`}
+                alt=""
+                fill
+                sizes="(max-width: 900px) 100vw, 20vw"
+                priority={index < 2}
+              />
             </div>
             <div className="tileCopy">
               <span className="tileFamily">{idea.family}</span>
@@ -56,7 +56,6 @@ export function IdeaPicker({ ideas }: Props) {
                   </dd>
                 </div>
               </dl>
-              <span className="tileAction">Open preset</span>
             </div>
           </Link>
         ))}
