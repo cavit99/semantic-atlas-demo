@@ -1,6 +1,7 @@
 {
   "name": "semantic-atlas-demo",
   "private": true,
+  "license": "CC-BY-NC-4.0",
   "scripts": {
     "dev:web": "npm --prefix web run dev",
     "build:web": "npm --prefix web run build",

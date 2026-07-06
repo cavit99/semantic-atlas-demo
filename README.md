@@ -63,3 +63,7 @@ npm run test:core
 ```
 
 Model weights, generated images, and machine-specific paths are not committed.
+
+## License
+
+CC BY-NC 4.0. Commercial use is not permitted without prior written permission.
