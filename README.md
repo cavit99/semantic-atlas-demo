@@ -47,7 +47,7 @@ Use this path for UI work and fast presentation checks.
 Terminal 1:
 
 ```bash
-cd /Users/caviterginsoy/Coding/semantic-atlas-demo/renderer
+cd renderer
 uv sync
 RENDER_BACKEND=mock uv run semantic-atlas-demo-renderer
 ```
@@ -55,7 +55,7 @@ RENDER_BACKEND=mock uv run semantic-atlas-demo-renderer
 Terminal 2:
 
 ```bash
-cd /Users/caviterginsoy/Coding/semantic-atlas-demo/web
+cd web
 npm install
 npm run dev
 ```
@@ -68,30 +68,22 @@ Use this path for the real demo on Apple Silicon or CUDA. It uses the same UI an
 job API as mock mode.
 
 ```bash
-cd /Users/caviterginsoy/Coding/semantic-atlas-demo/renderer
+cd renderer
 uv sync --group local-models
-unset AE_MODEL_PATH
+export KLEIN_4B_MODEL_PATH=/absolute/path/to/flux-2-klein-4b.safetensors
+export FLUX2_TEXT_ENCODER_MODEL=/absolute/path/to/qwen3-transformers-model
 ATLAS_GRID_BATCH_SIZE=3 RENDER_BACKEND=flux2_klein DEVICE=auto RELOAD=0 uv run semantic-atlas-demo-renderer
-```
-
-The renderer automatically uses the local Flux2 Klein transformer when present:
-
-```text
-/Users/caviterginsoy/ComfyUI/models/diffusion_models/flux-2-klein-4b.safetensors
 ```
 
 For Qwen, `FLUX2_TEXT_ENCODER_MODEL` may point to a Transformers model directory
 or repo id. A single `qwen_3_4b.safetensors` file is not enough by itself because
-the tokenizer and config files are also required. The current local wrapper path
-is:
+the tokenizer and config files are also required.
 
-```text
-~/.cache/semantic-atlas-demo/qwen3-4b
-```
+Only set `AE_MODEL_PATH` when the file has BFL-compatible key names. Otherwise
+leave it unset and let the BFL loader use its normal VAE source.
 
-Do not point `AE_MODEL_PATH` at the ComfyUI `flux2-vae.safetensors` file unless
-it has BFL-compatible key names. Leaving `AE_MODEL_PATH` unset lets the BFL
-loader use its normal VAE source.
+For a public-safe environment template, see `.env.example`. The application does
+not commit model weights or machine-specific paths.
 
 ## Grid Batching
 
@@ -114,7 +106,7 @@ RENDER_BACKEND=flux2_klein  # Flux2 Klein 4B with custom embedding interpolation
 ```
 
 The important production-facing idea is that model backends stay behind one job
-API, so the event demo can move from mock to local MPS to rented CUDA without
+API, so the demo can move from mock to local MPS to rented CUDA without
 changing the frontend.
 
 ## Key Files

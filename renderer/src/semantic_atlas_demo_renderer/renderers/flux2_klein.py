@@ -19,10 +19,6 @@ from semantic_atlas_demo_renderer.schemas import Idea, PromptSetText, RenderedIm
 
 from .base import Renderer
 
-DEFAULT_KLEIN_4B_MODEL_PATH = (
-    Path.home() / "ComfyUI/models/diffusion_models/flux-2-klein-4b.safetensors"
-)
-DEFAULT_QWEN_4B_MODEL_DIR = Path.home() / ".cache/semantic-atlas-demo/qwen3-4b"
 QWEN3_OUTPUT_LAYERS = (9, 18, 27)
 QWEN3_MAX_LENGTH = 512
 
@@ -94,7 +90,6 @@ class Flux2KleinRenderer(Renderer):
                 "Run `uv sync --group local-models` in renderer/ before using this backend."
             ) from error
 
-        configure_local_flux2_paths()
         self.torch = torch
         self.model_name = os.environ.get("FLUX2_MODEL_NAME", "flux.2-klein-4b")
         self.device = resolve_device(
@@ -280,9 +275,6 @@ class Flux2KleinRenderer(Renderer):
 
             return Qwen3Embedder(model_spec=model_spec, device=self.device)
 
-        if DEFAULT_QWEN_4B_MODEL_DIR.exists():
-            return LocalQwen3Embedder(DEFAULT_QWEN_4B_MODEL_DIR, device=self.device)
-
         return load_text_encoder(self.model_name, device=self.device)
 
     def _encode_prompt_set(self, prompt_set: PromptSetText) -> EncodedPromptSet:
@@ -380,17 +372,6 @@ class Flux2KleinRenderer(Renderer):
             torch.cuda.empty_cache()
         elif device_type == "mps" and hasattr(torch, "mps"):
             torch.mps.empty_cache()
-
-
-def configure_local_flux2_paths() -> None:
-    prefer_local_file_env("KLEIN_4B_MODEL_PATH", DEFAULT_KLEIN_4B_MODEL_PATH)
-
-
-def prefer_local_file_env(name: str, fallback_path: Path) -> None:
-    if name in os.environ:
-        return
-    if fallback_path.exists():
-        os.environ[name] = str(fallback_path)
 
 
 def resolve_device(torch: Any, requested: str):

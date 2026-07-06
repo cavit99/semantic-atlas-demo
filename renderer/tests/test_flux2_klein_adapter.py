@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import os
 from pathlib import Path
 
 import pytest
@@ -11,10 +10,7 @@ from PIL import Image
 from semantic_atlas_demo_renderer.ideas import DEFAULT_STYLE_ANCHOR, load_ideas, prompt_set_for_idea
 from semantic_atlas_demo_renderer.interpolation import EncodedPromptSet, InterpolationSettings
 from semantic_atlas_demo_renderer.renderers import flux2_klein
-from semantic_atlas_demo_renderer.renderers.flux2_klein import (
-    Flux2KleinRenderer,
-    prefer_local_file_env,
-)
+from semantic_atlas_demo_renderer.renderers.flux2_klein import Flux2KleinRenderer
 
 from .test_interpolation import FakeTensor
 
@@ -43,22 +39,6 @@ def test_prompt_set_for_idea_builds_base_and_axis_endpoint_prompts() -> None:
     assert prompt_set.y_positive_extreme is not None
     assert "extreme endpoint transformation" in prompt_set.x_negative_extreme
     assert idea.xAxis.negativePrompt in prompt_set.x_negative_extreme
-
-
-def test_prefer_local_file_env_uses_existing_fallback_without_overwriting(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    fallback = tmp_path / "model.safetensors"
-    fallback.write_bytes(b"stub")
-
-    monkeypatch.delenv("KLEIN_4B_MODEL_PATH", raising=False)
-    prefer_local_file_env("KLEIN_4B_MODEL_PATH", fallback)
-    assert Path(os.environ["KLEIN_4B_MODEL_PATH"]) == fallback
-
-    monkeypatch.setenv("KLEIN_4B_MODEL_PATH", "/already/set.safetensors")
-    prefer_local_file_env("KLEIN_4B_MODEL_PATH", fallback)
-    assert os.environ["KLEIN_4B_MODEL_PATH"] == "/already/set.safetensors"
 
 
 def test_text_encoder_override_rejects_single_safetensors_file(
@@ -95,6 +75,22 @@ def test_text_encoder_override_uses_local_transformers_directory(
 
     assert isinstance(embedder, FakeLocalQwen3Embedder)
     assert calls == [{"model_spec": tmp_path, "device": "test-device"}]
+
+
+def test_text_encoder_without_override_uses_flux2_loader(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("FLUX2_TEXT_ENCODER_MODEL", raising=False)
+
+    renderer = Flux2KleinRenderer.__new__(Flux2KleinRenderer)
+    renderer.device = "test-device"
+    renderer.model_name = "flux.2-klein-4b"
+
+    def fake_loader(model_name: str, *, device: object) -> dict[str, object]:
+        return {"model_name": model_name, "device": device}
+
+    assert renderer._load_text_encoder(fake_loader) == {
+        "model_name": "flux.2-klein-4b",
+        "device": "test-device",
+    }
 
 
 def test_flux2_klein_render_uses_interpolated_conditioning_before_sampling() -> None:
